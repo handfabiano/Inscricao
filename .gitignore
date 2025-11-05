@@ -1,0 +1,48 @@
+# Sistema de Inscrição de Atletas - GitIgnore
+
+# Uploads
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Configurações locais
+config/config.local.php
+.env
+
+# Logs
+*.log
+logs/*
+
+# Cache
+cache/*
+tmp/*
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Composer
+vendor/
+composer.lock
+
+# Node modules (se usar)
+node_modules/
+package-lock.json
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Backups de banco de dados
+*.sql.gz
+*.sql.bak
+backup/
