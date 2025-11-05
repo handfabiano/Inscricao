@@ -143,6 +143,11 @@ $modalidades = $pdo->query("SELECT id, nome FROM modalidades WHERE ativo = 1 ORD
             <h1><i class="fas fa-tachometer-alt"></i> Painel Administrativo</h1>
             <nav>
                 <a href="index.php" class="active">Dashboard</a>
+                <a href="busca.php">Busca</a>
+                <a href="relatorios.php">Relatórios</a>
+                <a href="modalidades.php">Modalidades</a>
+                <a href="logs.php">Logs</a>
+                <a href="perfil.php">Perfil</a>
                 <a href="../index.php" target="_blank">Ver Site</a>
                 <a href="logout.php">Sair</a>
             </nav>
