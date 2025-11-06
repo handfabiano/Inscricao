@@ -62,6 +62,11 @@ $pageTitle = 'Dashboard Administrativo';
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="inscricoes.php">
+                            <i class="fas fa-clipboard-list"></i> Inscrições
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <span class="nav-link text-white">
                             <i class="fas fa-user-shield"></i> <?php echo htmlspecialchars($_SESSION['admin_nome']); ?>
                         </span>
