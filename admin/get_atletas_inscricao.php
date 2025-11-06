@@ -26,7 +26,6 @@ try {
             c.nome as competicao_nome,
             c.banner_path as competicao_banner,
             e.nome as equipe_nome,
-            e.municipio as equipe_municipio,
             e.responsavel_nome as equipe_responsavel,
             m.nome as modalidade_nome
         FROM inscricoes_competicoes i
@@ -75,7 +74,6 @@ try {
         ],
         'equipe' => [
             'nome' => $inscricao['equipe_nome'],
-            'municipio' => $inscricao['equipe_municipio'],
             'responsavel' => $inscricao['equipe_responsavel']
         ],
         'inscricao' => [

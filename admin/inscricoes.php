@@ -46,7 +46,7 @@ $sql = "
         c.nome as competicao_nome,
         c.status as competicao_status,
         e.nome as equipe_nome,
-        e.municipio as equipe_municipio,
+        e.responsavel_nome as equipe_responsavel,
         m.nome as modalidade_nome,
         (SELECT COUNT(*) FROM inscricoes_atletas WHERE inscricao_competicao_id = i.id) as total_atletas
     FROM inscricoes_competicoes i
@@ -316,7 +316,7 @@ $pageTitle = 'Gerenciar Inscrições';
                                     <td>
                                         <div><?php echo htmlspecialchars($insc['equipe_nome']); ?></div>
                                         <small class="text-muted">
-                                            <i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($insc['equipe_municipio']); ?>
+                                            <i class="fas fa-user"></i> <?php echo htmlspecialchars($insc['equipe_responsavel']); ?>
                                         </small>
                                     </td>
                                     <td>
@@ -436,7 +436,7 @@ $pageTitle = 'Gerenciar Inscrições';
                             <h6 class="text-muted mb-1">Equipe</h6>
                             <p class="mb-0"><strong>${data.equipe.nome}</strong></p>
                             <small class="text-muted">
-                                <i class="fas fa-map-marker-alt"></i> ${data.equipe.municipio}
+                                <i class="fas fa-user"></i> Responsável: ${data.equipe.responsavel}
                             </small>
                         </div>
                         <h6 class="text-muted mb-3">Atletas (${data.atletas.length})</h6>
