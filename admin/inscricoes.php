@@ -73,7 +73,7 @@ if (!empty($filtroStatus)) {
     $params[] = $filtroStatus;
 }
 
-$sql .= " ORDER BY i.data_inscricao DESC";
+$sql .= " ORDER BY i.created_at DESC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -336,7 +336,7 @@ $pageTitle = 'Gerenciar Inscrições';
                                     <td>
                                         <small class="text-muted">
                                             <i class="fas fa-calendar-alt"></i>
-                                            <?php echo formatarDataHora($insc['data_inscricao']); ?>
+                                            <?php echo formatarDataHora($insc['created_at']); ?>
                                         </small>
                                     </td>
                                     <td class="text-center">

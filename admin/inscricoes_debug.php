@@ -98,7 +98,7 @@ if (!empty($filtroStatus)) {
     $params[] = $filtroStatus;
 }
 
-$sql .= " ORDER BY i.data_inscricao DESC";
+$sql .= " ORDER BY i.created_at DESC";
 
 echo "<!-- Query construída -->\n";
 
@@ -225,7 +225,7 @@ echo "<!-- Iniciando HTML -->\n";
                                     <td><?php echo htmlspecialchars($insc['equipe_nome']); ?></td>
                                     <td><?php echo htmlspecialchars($insc['status']); ?></td>
                                     <td><?php echo $insc['total_atletas']; ?></td>
-                                    <td><?php echo formatarDataHora($insc['data_inscricao']); ?></td>
+                                    <td><?php echo formatarDataHora($insc['created_at']); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

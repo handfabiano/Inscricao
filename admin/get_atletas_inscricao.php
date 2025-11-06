@@ -79,7 +79,7 @@ try {
         'inscricao' => [
             'protocolo' => $inscricao['protocolo'],
             'status' => $inscricao['status'],
-            'data_inscricao' => formatarDataHora($inscricao['data_inscricao'])
+            'data_inscricao' => formatarDataHora($inscricao['created_at'])
         ],
         'atletas' => $atletas
     ], JSON_UNESCAPED_UNICODE);
