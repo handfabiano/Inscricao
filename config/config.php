@@ -1,56 +1,104 @@
 <?php
-// Configurações Gerais do Sistema
-session_start();
+/**
+ * Sistema de Gestão de Competições - v3.0
+ * Arquivo de Configuração Principal
+ */
 
-// URL Base
-define('BASE_URL', 'http://localhost/inscricao');
+// Iniciar sessão
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Diretórios
-define('ROOT_PATH', dirname(__DIR__));
-define('UPLOAD_PATH', ROOT_PATH . '/public/uploads/');
-define('UPLOAD_URL', BASE_URL . '/public/uploads/');
+// Importar conexão com banco de dados
+require_once __DIR__ . '/database.php';
 
-// Configurações de Upload
-define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
-define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'pdf']);
+// ============================================================================
+// CONFIGURAÇÕES GERAIS
+// ============================================================================
 
-// Configurações de Email (para notificações)
-define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 587);
-define('SMTP_USER', 'seu_email@gmail.com');
-define('SMTP_PASS', 'sua_senha');
-define('SMTP_FROM', 'noreply@inscricoes.com');
-define('SMTP_FROM_NAME', 'Sistema de Inscrições');
+// URL base do sistema (AJUSTAR PARA SUA URL)
+define('BASE_URL', 'https://mediumblue-rhinoceros-869852.hostingersite.com');
 
 // Timezone
 date_default_timezone_set('America/Boa_Vista');
 
-// Includes
-require_once 'database.php';
+// ============================================================================
+// CAMINHOS DE UPLOAD
+// ============================================================================
 
-// Funções Auxiliares
-function sanitize($data) {
-    return htmlspecialchars(strip_tags(trim($data)));
+define('UPLOAD_PATH', __DIR__ . '/../public/uploads/');
+define('BANNER_PATH', UPLOAD_PATH . 'banners/');
+define('FOTO_PATH', UPLOAD_PATH . 'fotos/');
+define('DOCUMENTO_PATH', UPLOAD_PATH . 'documentos/');
+
+// URLs públicas
+define('UPLOAD_URL', BASE_URL . '/public/uploads/');
+define('BANNER_URL', UPLOAD_URL . 'banners/');
+define('FOTO_URL', UPLOAD_URL . 'fotos/');
+define('DOCUMENTO_URL', UPLOAD_URL . 'documentos/');
+
+// ============================================================================
+// CONFIGURAÇÕES DE UPLOAD
+// ============================================================================
+
+define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
+define('MAX_FOTO_SIZE', 2 * 1024 * 1024); // 2MB para fotos
+define('ALLOWED_IMAGE_EXTENSIONS', ['jpg', 'jpeg', 'png']);
+define('ALLOWED_DOC_EXTENSIONS', ['pdf', 'jpg', 'jpeg', 'png']);
+
+// ============================================================================
+// FUNÇÕES DE AUTENTICAÇÃO
+// ============================================================================
+
+/**
+ * Verificar se admin está logado
+ */
+function isAdminLoggedIn() {
+    return isset($_SESSION['admin_id']) && !empty($_SESSION['admin_id']);
 }
 
-function generateProtocol() {
-    return 'INSC' . date('Ymd') . strtoupper(substr(md5(uniqid(rand(), true)), 0, 6));
+/**
+ * Verificar se equipe está logada
+ */
+function isEquipeLoggedIn() {
+    return isset($_SESSION['equipe_id']) && !empty($_SESSION['equipe_id']);
 }
 
-function formatCPF($cpf) {
-    return preg_replace("/(\d{3})(\d{3})(\d{3})(\d{2})/", "$1.$2.$3-$4", $cpf);
-}
-
-function formatPhone($phone) {
-    $phone = preg_replace('/[^0-9]/', '', $phone);
-    if (strlen($phone) == 11) {
-        return preg_replace("/(\d{2})(\d{5})(\d{4})/", "($1) $2-$3", $phone);
-    } else {
-        return preg_replace("/(\d{2})(\d{4})(\d{4})/", "($1) $2-$3", $phone);
+/**
+ * Redirecionar se não estiver logado (admin)
+ */
+function requireAdminLogin() {
+    if (!isAdminLoggedIn()) {
+        header('Location: ' . BASE_URL . '/admin/login.php');
+        exit;
     }
 }
 
-function validateCPF($cpf) {
+/**
+ * Redirecionar se não estiver logado (equipe)
+ */
+function requireEquipeLogin() {
+    if (!isEquipeLoggedIn()) {
+        header('Location: ' . BASE_URL . '/equipe/login.php');
+        exit;
+    }
+}
+
+// ============================================================================
+// FUNÇÕES AUXILIARES
+// ============================================================================
+
+/**
+ * Sanitizar string
+ */
+function sanitize($string) {
+    return htmlspecialchars(trim($string), ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Validar CPF
+ */
+function validarCPF($cpf) {
     $cpf = preg_replace('/[^0-9]/', '', $cpf);
 
     if (strlen($cpf) != 11) {
@@ -74,21 +122,185 @@ function validateCPF($cpf) {
     return true;
 }
 
-function isLoggedIn() {
-    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
-}
-
-function requireLogin() {
-    if (!isLoggedIn()) {
-        header('Location: ' . BASE_URL . '/admin/login.php');
-        exit;
-    }
-}
-
+/**
+ * Calcular idade
+ */
 function calcularIdade($dataNascimento) {
-    $data = new DateTime($dataNascimento);
+    $nascimento = new DateTime($dataNascimento);
     $hoje = new DateTime();
-    $idade = $hoje->diff($data);
+    $idade = $hoje->diff($nascimento);
     return $idade->y;
+}
+
+/**
+ * Formatar CPF
+ */
+function formatarCPF($cpf) {
+    $cpf = preg_replace('/[^0-9]/', '', $cpf);
+    return substr($cpf, 0, 3) . '.' . substr($cpf, 3, 3) . '.' . substr($cpf, 6, 3) . '-' . substr($cpf, 9, 2);
+}
+
+/**
+ * Formatar telefone
+ */
+function formatarTelefone($telefone) {
+    $telefone = preg_replace('/[^0-9]/', '', $telefone);
+    if (strlen($telefone) == 11) {
+        return '(' . substr($telefone, 0, 2) . ') ' . substr($telefone, 2, 5) . '-' . substr($telefone, 7);
+    } elseif (strlen($telefone) == 10) {
+        return '(' . substr($telefone, 0, 2) . ') ' . substr($telefone, 2, 4) . '-' . substr($telefone, 6);
+    }
+    return $telefone;
+}
+
+/**
+ * Formatar data para PT-BR
+ */
+function formatarData($data) {
+    if (empty($data)) return '';
+    $dt = new DateTime($data);
+    return $dt->format('d/m/Y');
+}
+
+/**
+ * Formatar data e hora para PT-BR
+ */
+function formatarDataHora($dataHora) {
+    if (empty($dataHora)) return '';
+    $dt = new DateTime($dataHora);
+    return $dt->format('d/m/Y H:i');
+}
+
+// ============================================================================
+// FUNÇÕES DE UPLOAD
+// ============================================================================
+
+/**
+ * Upload de arquivo
+ */
+function uploadFile($file, $fieldName, $targetDir, $allowedExtensions, $maxSize) {
+    // Verificar se arquivo foi enviado
+    if (!isset($file) || $file['error'] === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+
+    // Verificar erro no upload
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception("Erro ao fazer upload do arquivo: $fieldName");
+    }
+
+    // Validar extensão
+    $fileName = $file['name'];
+    $fileSize = $file['size'];
+    $fileTmp = $file['tmp_name'];
+    $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+    if (!in_array($fileExt, $allowedExtensions)) {
+        throw new Exception("Extensão não permitida para: $fieldName. Use: " . implode(', ', $allowedExtensions));
+    }
+
+    // Validar tamanho
+    if ($fileSize > $maxSize) {
+        $maxMB = round($maxSize / 1024 / 1024, 1);
+        throw new Exception("Arquivo muito grande: $fieldName (máximo {$maxMB}MB)");
+    }
+
+    // Criar diretório se não existir
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0775, true);
+    }
+
+    // Gerar nome único
+    $newFileName = uniqid() . '_' . time() . '.' . $fileExt;
+    $uploadPath = $targetDir . $newFileName;
+
+    // Mover arquivo
+    if (!move_uploaded_file($fileTmp, $uploadPath)) {
+        throw new Exception("Erro ao salvar arquivo: $fieldName");
+    }
+
+    return $newFileName;
+}
+
+// ============================================================================
+// FUNÇÕES DE HISTÓRICO
+// ============================================================================
+
+/**
+ * Registrar histórico de atleta
+ */
+function registrarHistoricoAtleta($pdo, $atletaId, $eventoTipo, $descricao, $dados = []) {
+    $stmt = $pdo->prepare("
+        INSERT INTO historico_atletas (atleta_id, evento_tipo, descricao, dados_novos, data_evento)
+        VALUES (?, ?, ?, ?, NOW())
+    ");
+    $stmt->execute([
+        $atletaId,
+        $eventoTipo,
+        $descricao,
+        !empty($dados) ? json_encode($dados) : null
+    ]);
+}
+
+/**
+ * Registrar histórico de equipe
+ */
+function registrarHistoricoEquipe($pdo, $equipeId, $eventoTipo, $descricao, $dados = []) {
+    $stmt = $pdo->prepare("
+        INSERT INTO historico_equipes (equipe_id, evento_tipo, descricao, dados_adicionais, data_evento)
+        VALUES (?, ?, ?, ?, NOW())
+    ");
+    $stmt->execute([
+        $equipeId,
+        $eventoTipo,
+        $descricao,
+        !empty($dados) ? json_encode($dados) : null
+    ]);
+}
+
+// ============================================================================
+// FUNÇÕES DE UTILIDADE
+// ============================================================================
+
+/**
+ * Gerar protocolo único
+ */
+function gerarProtocolo() {
+    return strtoupper(uniqid('INSC'));
+}
+
+/**
+ * Redirecionar com mensagem
+ */
+function redirect($url, $mensagem = '', $tipo = 'success') {
+    if ($mensagem) {
+        $_SESSION['mensagem'] = $mensagem;
+        $_SESSION['mensagem_tipo'] = $tipo;
+    }
+    header("Location: $url");
+    exit;
+}
+
+/**
+ * Exibir mensagem flash
+ */
+function exibirMensagem() {
+    if (isset($_SESSION['mensagem'])) {
+        $tipo = $_SESSION['mensagem_tipo'] ?? 'info';
+        $mensagem = $_SESSION['mensagem'];
+
+        $class = 'alert-info';
+        if ($tipo === 'success') $class = 'alert-success';
+        if ($tipo === 'error') $class = 'alert-danger';
+        if ($tipo === 'warning') $class = 'alert-warning';
+
+        echo "<div class='alert $class alert-dismissible fade show' role='alert'>";
+        echo htmlspecialchars($mensagem);
+        echo "<button type='button' class='btn-close' data-bs-dismiss='alert'></button>";
+        echo "</div>";
+
+        unset($_SESSION['mensagem']);
+        unset($_SESSION['mensagem_tipo']);
+    }
 }
 ?>
