@@ -231,6 +231,16 @@ $pageTitle = 'Gerenciar Competições';
                                             <strong>Atletas:</strong> <?php echo $comp['min_atletas']; ?> a <?php echo $comp['max_atletas']; ?>
                                         </div>
                                     </div>
+
+                                    <div class="d-grid gap-2 mt-3">
+                                        <a href="editar_competicao.php?id=<?php echo $comp['id']; ?>" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                                onclick="confirmarExclusao(<?php echo $comp['id']; ?>, '<?php echo addslashes($comp['nome']); ?>')">
+                                            <i class="fas fa-trash"></i> Excluir
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -486,6 +496,13 @@ $pageTitle = 'Gerenciar Competições';
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmarExclusao(id, nome) {
+            if (confirm(`Tem certeza que deseja excluir a competição "${nome}"?\n\nEsta ação não pode ser desfeita!`)) {
+                window.location.href = `excluir_competicao.php?id=${id}`;
+            }
+        }
+    </script>
     <script>
         function previewBanner(event) {
             const file = event.target.files[0];
