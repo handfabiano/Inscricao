@@ -71,7 +71,7 @@ $sql = "
         c.nome as competicao_nome,
         c.status as competicao_status,
         e.nome as equipe_nome,
-        e.municipio as equipe_municipio,
+        e.responsavel_nome as equipe_responsavel,
         m.nome as modalidade_nome,
         (SELECT COUNT(*) FROM inscricoes_atletas WHERE inscricao_competicao_id = i.id) as total_atletas
     FROM inscricoes_competicoes i
