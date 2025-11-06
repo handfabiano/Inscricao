@@ -52,6 +52,8 @@ $competicoesAbertas = $stmt->fetchAll();
                     <a href="index.php">Dashboard</a>
                     <a href="cadastrar_atleta.php">Cadastrar Atleta</a>
                     <a href="atletas.php">Meus Atletas</a>
+                    <a href="inscricoes.php">Inscrições</a>
+                    <a href="minhas_inscricoes.php">Histórico</a>
                     <a href="logout.php">Sair</a>
                 </nav>
             </div>
