@@ -37,7 +37,7 @@ try {
         WHERE c.status = 'Aberta'
         AND c.data_inicio_inscricoes <= ?
         AND c.data_fim_inscricoes >= ?
-        ORDER BY c.data_inicio DESC
+        ORDER BY c.created_at DESC
     ");
     $stmt->execute([$equipeId, $hoje, $hoje]);
     $competicoesAbertas = $stmt->fetchAll();

@@ -16,8 +16,8 @@ $stmt = $pdo->prepare("
         ic.*,
         c.nome as competicao_nome,
         c.banner_path,
-        c.data_inicio,
-        c.data_fim,
+        c.data_inicio_evento,
+        c.data_fim_evento,
         m.nome as modalidade_nome,
         m.icone as modalidade_icone,
         (SELECT COUNT(*) FROM inscricoes_atletas
@@ -214,11 +214,11 @@ $pageTitle = 'Minhas Inscrições';
                                             <strong>Atletas Inscritos:</strong>
                                             <?php echo $insc['qtd_atletas']; ?>
                                         </li>
-                                        <?php if ($insc['data_inicio']): ?>
+                                        <?php if ($insc['data_inicio_evento']): ?>
                                             <li>
                                                 <i class="fas fa-play-circle"></i>
                                                 <strong>Início:</strong>
-                                                <?php echo formatarData($insc['data_inicio']); ?>
+                                                <?php echo formatarData($insc['data_inicio_evento']); ?>
                                             </li>
                                         <?php endif; ?>
                                     </ul>

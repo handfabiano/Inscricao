@@ -24,8 +24,8 @@ try {
         SELECT
             ic.*,
             c.nome as competicao_nome,
-            c.data_inicio,
-            c.data_fim,
+            c.data_inicio_evento,
+            c.data_fim_evento,
             m.nome as modalidade_nome
         FROM inscricoes_competicoes ic
         INNER JOIN competicoes c ON ic.competicao_id = c.id
@@ -92,8 +92,8 @@ try {
             'id' => $inscricao['competicao_id'],
             'nome' => $inscricao['competicao_nome'],
             'modalidade' => $inscricao['modalidade_nome'],
-            'data_inicio' => $inscricao['data_inicio'] ? formatarData($inscricao['data_inicio']) : null,
-            'data_fim' => $inscricao['data_fim'] ? formatarData($inscricao['data_fim']) : null
+            'data_inicio' => $inscricao['data_inicio_evento'] ? formatarData($inscricao['data_inicio_evento']) : null,
+            'data_fim' => $inscricao['data_fim_evento'] ? formatarData($inscricao['data_fim_evento']) : null
         ],
         'atletas' => $atletasFormatados
     ];
