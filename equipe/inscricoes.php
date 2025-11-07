@@ -86,15 +86,30 @@ $pageTitle = 'Inscrições em Competições';
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="<?php echo BASE_URL; ?>/public/css/style.css" rel="stylesheet">
     <style>
-        /* Corrigir opacidade do modal */
+        /* Sobrescrever estilos do style.css que interferem com Bootstrap Modal */
         .modal {
+            display: block !important;
             opacity: 1 !important;
             z-index: 1055 !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            align-items: flex-start !important;
+            justify-content: center !important;
+            padding-top: 3rem !important;
+        }
+
+        .modal.show {
+            display: block !important;
+            opacity: 1 !important;
+        }
+
+        .modal:not(.show) {
+            display: none !important;
         }
 
         .modal-dialog {
             opacity: 1 !important;
             z-index: 1056 !important;
+            margin: 1.75rem auto !important;
         }
 
         .modal-content {
@@ -102,6 +117,8 @@ $pageTitle = 'Inscrições em Competições';
             background: #ffffff !important;
             z-index: 1057 !important;
             position: relative;
+            border: 1px solid rgba(0,0,0,.2) !important;
+            border-radius: 0.5rem !important;
         }
 
         .modal-backdrop {
