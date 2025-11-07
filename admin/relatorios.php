@@ -10,6 +10,13 @@ $dataInicio = $_GET['data_inicio'] ?? date('Y-m-01');
 $dataFim = $_GET['data_fim'] ?? date('Y-m-t');
 $tipoRelatorio = $_GET['tipo'] ?? 'geral';
 
+// Validar datas
+if (strtotime($dataInicio) > strtotime($dataFim)) {
+    $temp = $dataInicio;
+    $dataInicio = $dataFim;
+    $dataFim = $temp;
+}
+
 // Função para gerar relatório geral
 function getRelatorioGeral($pdo, $dataInicio, $dataFim) {
     $stats = [];
@@ -126,10 +133,14 @@ function getAtletasPorFaixaEtaria($pdo) {
 }
 
 // Buscar dados baseado no tipo de relatório
-$relatorioGeral = getRelatorioGeral($pdo, $dataInicio, $dataFim);
-$inscricoesPorCompeticao = getInscricoesPorCompeticao($pdo, $dataInicio, $dataFim);
-$equipesPorMunicipio = getEquipesPorMunicipio($pdo);
-$atletasPorFaixaEtaria = getAtletasPorFaixaEtaria($pdo);
+try {
+    $relatorioGeral = getRelatorioGeral($pdo, $dataInicio, $dataFim);
+    $inscricoesPorCompeticao = getInscricoesPorCompeticao($pdo, $dataInicio, $dataFim);
+    $equipesPorMunicipio = getEquipesPorMunicipio($pdo);
+    $atletasPorFaixaEtaria = getAtletasPorFaixaEtaria($pdo);
+} catch (Exception $e) {
+    die("Erro ao gerar relatório: " . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
