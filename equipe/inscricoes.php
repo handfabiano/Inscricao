@@ -4,21 +4,11 @@
  * Equipe pode se inscrever em competições abertas
  */
 
-// Habilitar exibição de erros para debug
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('log_errors', 1);
+require_once __DIR__ . '/../config/config.php';
+requireEquipeLogin();
 
-try {
-    require_once __DIR__ . '/../config/config.php';
-    requireEquipeLogin();
-
-    $pdo = getDBConnection();
-    $equipeId = $_SESSION['equipe_id'];
-} catch (Exception $e) {
-    die("Erro ao inicializar: " . $e->getMessage() . "<br>Linha: " . $e->getLine() . "<br>Arquivo: " . $e->getFile());
-}
-
+$pdo = getDBConnection();
+$equipeId = $_SESSION['equipe_id'];
 $erro = null;
 $competicoesAbertas = [];
 $atletasDisponiveis = [];
@@ -35,7 +25,7 @@ try {
 
     // Buscar competições abertas (inscrições abertas)
     $hoje = date('Y-m-d');
-    $sqlCompeticoes = "
+    $stmt = $pdo->prepare("
         SELECT
             c.*,
             m.nome as modalidade_nome,
@@ -48,30 +38,22 @@ try {
         AND c.data_inicio_inscricoes <= ?
         AND c.data_fim_inscricoes >= ?
         ORDER BY c.created_at DESC
-    ";
-    $stmt = $pdo->prepare($sqlCompeticoes);
-    if (!$stmt) {
-        throw new Exception("Erro ao preparar query de competições: " . print_r($pdo->errorInfo(), true));
-    }
+    ");
     $stmt->execute([$equipeId, $hoje, $hoje]);
     $competicoesAbertas = $stmt->fetchAll();
 
     // Buscar atletas ativos da equipe
-    $sqlAtletas = "
+    $stmt = $pdo->prepare("
         SELECT id, nome_completo, data_nascimento, genero, foto_path
         FROM atletas
         WHERE equipe_atual_id = ? AND ativo = 1
         ORDER BY nome_completo
-    ";
-    $stmt = $pdo->prepare($sqlAtletas);
-    if (!$stmt) {
-        throw new Exception("Erro ao preparar query de atletas: " . print_r($pdo->errorInfo(), true));
-    }
+    ");
     $stmt->execute([$equipeId]);
     $atletasDisponiveis = $stmt->fetchAll();
 
 } catch (Exception $e) {
-    $erro = "Erro detalhado: " . $e->getMessage() . "<br>Linha: " . $e->getLine() . "<br>Arquivo: " . $e->getFile();
+    $erro = 'Erro ao carregar informações. Por favor, tente novamente.';
 }
 
 $pageTitle = 'Inscrições em Competições';
@@ -447,7 +429,6 @@ $pageTitle = 'Inscrições em Competições';
         let modalInstance = null;
 
         function abrirModalInscricao(id, nome, min, max, genero, categorias) {
-            console.log('Abrindo modal para competição:', nome);
             minAtletas = min;
             maxAtletas = max;
             generoPermitido = genero || '';
@@ -495,7 +476,6 @@ $pageTitle = 'Inscrições em Competições';
                     btn.style.pointerEvents = 'all';
                     btn.style.cursor = 'pointer';
                 });
-                console.log('Botões do modal configurados:', botoes.length);
             }, 100);
         }
 
