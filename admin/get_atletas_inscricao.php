@@ -46,7 +46,7 @@ try {
     $stmt = $pdo->prepare("
         SELECT
             a.id,
-            a.nome,
+            a.nome_completo as nome,
             a.cpf,
             a.genero,
             a.data_nascimento,
@@ -55,7 +55,7 @@ try {
         FROM inscricoes_atletas ia
         INNER JOIN atletas a ON ia.atleta_id = a.id
         WHERE ia.inscricao_competicao_id = ?
-        ORDER BY a.nome
+        ORDER BY a.nome_completo
     ");
     $stmt->execute([$inscricaoId]);
     $atletas = $stmt->fetchAll();

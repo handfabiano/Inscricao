@@ -26,7 +26,7 @@ $stmt = $pdo->prepare("
     INNER JOIN competicoes c ON ic.competicao_id = c.id
     LEFT JOIN modalidades m ON c.modalidade_id = m.id
     WHERE ic.equipe_id = ?
-    ORDER BY ic.data_inscricao DESC
+    ORDER BY ic.created_at DESC
 ");
 $stmt->execute([$equipeId]);
 $inscricoes = $stmt->fetchAll();

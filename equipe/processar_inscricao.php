@@ -90,7 +90,7 @@ try {
     // Inserir inscrição da equipe
     $stmt = $pdo->prepare("
         INSERT INTO inscricoes_competicoes
-        (competicao_id, equipe_id, protocolo, status, data_inscricao)
+        (competicao_id, equipe_id, protocolo, status, created_at)
         VALUES (?, ?, ?, 'Pendente', NOW())
     ");
     $stmt->execute([$competicaoId, $equipeId, $protocolo]);
@@ -99,7 +99,7 @@ try {
     // Inserir atletas da inscrição
     $stmt = $pdo->prepare("
         INSERT INTO inscricoes_atletas
-        (inscricao_competicao_id, atleta_id, data_inscricao)
+        (inscricao_competicao_id, atleta_id, created_at)
         VALUES (?, ?, NOW())
     ");
 
