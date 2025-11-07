@@ -85,6 +85,62 @@ $pageTitle = 'Inscrições em Competições';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="<?php echo BASE_URL; ?>/public/css/style.css" rel="stylesheet">
+    <style>
+        /* Corrigir opacidade do modal */
+        .modal {
+            opacity: 1 !important;
+        }
+
+        .modal-dialog {
+            opacity: 1 !important;
+        }
+
+        .modal-content {
+            opacity: 1 !important;
+            background: #ffffff !important;
+        }
+
+        .modal-backdrop {
+            opacity: 0.5 !important;
+        }
+
+        .modal-body {
+            opacity: 1 !important;
+        }
+
+        .modal-body * {
+            opacity: 1 !important;
+        }
+
+        .foto-circular {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #dee2e6;
+        }
+
+        /* Garantir que os itens de atletas fiquem visíveis */
+        .atleta-item {
+            opacity: 1 !important;
+            background: #ffffff !important;
+        }
+
+        .atleta-item.d-none {
+            display: none !important;
+        }
+
+        /* Estilos para checkboxes */
+        .form-check-input {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+        }
+
+        .form-check-label {
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -393,10 +449,10 @@ $pageTitle = 'Inscrições em Competições';
 
                 if (mostrar) {
                     item.classList.remove('d-none');
-                    item.style.opacity = '1';
+                    item.style.removeProperty('opacity');
+                    checkbox.disabled = false;
                 } else {
                     item.classList.add('d-none');
-                    item.style.opacity = '0.5';
                     checkbox.disabled = true;
                     checkbox.checked = false;
                 }
