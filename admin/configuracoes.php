@@ -80,49 +80,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Buscar administradores
-$stmt = $pdo->query("SELECT * FROM administradores ORDER BY created_at DESC");
-$administradores = $stmt->fetchAll();
+try {
+    $stmt = $pdo->query("SELECT * FROM administradores ORDER BY created_at DESC");
+    $administradores = $stmt->fetchAll();
+} catch (Exception $e) {
+    $administradores = [];
+}
 
 // Buscar estatísticas do sistema
 $stats = [];
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM competicoes");
-$stats['competicoes'] = $stmt->fetch()['total'];
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM competicoes");
+    $stats['competicoes'] = $stmt->fetch()['total'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes");
-$stats['equipes'] = $stmt->fetch()['total'];
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes");
+    $stats['equipes'] = $stmt->fetch()['total'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas");
-$stats['atletas'] = $stmt->fetch()['total'];
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas");
+    $stats['atletas'] = $stmt->fetch()['total'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes");
-$stats['inscricoes'] = $stmt->fetch()['total'];
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes");
+    $stats['inscricoes'] = $stmt->fetch()['total'];
+} catch (Exception $e) {
+    $stats = ['competicoes' => 0, 'equipes' => 0, 'atletas' => 0, 'inscricoes' => 0];
+}
 
 // Verificar se tabela de logs existe e buscar logs recentes
-$stmt = $pdo->query("SHOW TABLES LIKE 'logs_sistema'");
-$tabelaLogsExiste = $stmt->rowCount() > 0;
+$tabelaLogsExiste = false;
 $logsRecentes = [];
+try {
+    $stmt = $pdo->query("SHOW TABLES LIKE 'logs_sistema'");
+    $tabelaLogsExiste = $stmt->rowCount() > 0;
 
-if ($tabelaLogsExiste) {
-    $stmt = $pdo->query("
-        SELECT * FROM logs_sistema
-        ORDER BY created_at DESC
-        LIMIT 20
-    ");
-    $logsRecentes = $stmt->fetchAll();
+    if ($tabelaLogsExiste) {
+        $stmt = $pdo->query("
+            SELECT * FROM logs_sistema
+            ORDER BY created_at DESC
+            LIMIT 20
+        ");
+        $logsRecentes = $stmt->fetchAll();
+    }
+} catch (Exception $e) {
+    // Ignora erro se tabela não existe
 }
 
 // Informações do banco de dados
-$stmt = $pdo->query("SELECT DATABASE() as db_name");
-$dbInfo = $stmt->fetch();
-$dbName = $dbInfo['db_name'];
+try {
+    $stmt = $pdo->query("SELECT DATABASE() as db_name");
+    $dbInfo = $stmt->fetch();
+    $dbName = $dbInfo['db_name'];
 
-$stmt = $pdo->query("
-    SELECT table_name, ROUND(((data_length + index_length) / 1024 / 1024), 2) AS size_mb
-    FROM information_schema.TABLES
-    WHERE table_schema = ?
-    ORDER BY size_mb DESC
-", [$dbName]);
-$tabelasSizes = $stmt->fetchAll();
+    $stmt = $pdo->prepare("
+        SELECT table_name, ROUND(((data_length + index_length) / 1024 / 1024), 2) AS size_mb
+        FROM information_schema.TABLES
+        WHERE table_schema = ?
+        ORDER BY size_mb DESC
+    ");
+    $stmt->execute([$dbName]);
+    $tabelasSizes = $stmt->fetchAll();
+} catch (Exception $e) {
+    $dbName = 'N/A';
+    $tabelasSizes = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
