@@ -351,18 +351,20 @@ $pageTitle = 'Dashboard Administrativo';
                 </a>
             </div>
             <div class="col-md-4 col-lg-3">
-                <div class="card quick-access-card warning shadow-sm card-hover opacity-50" title="Em desenvolvimento">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-users fa-2x text-warning me-3"></i>
-                            <h6 class="mb-0">Equipes</h6>
-                            <?php if ($equipesPendentes > 0): ?>
-                                <span class="badge bg-danger ms-auto"><?php echo $equipesPendentes; ?></span>
-                            <?php endif; ?>
+                <a href="equipes.php" class="text-decoration-none">
+                    <div class="card quick-access-card warning shadow-sm card-hover">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-users fa-2x text-warning me-3"></i>
+                                <h6 class="mb-0">Equipes</h6>
+                                <?php if ($equipesPendentes > 0): ?>
+                                    <span class="badge bg-danger ms-auto"><?php echo $equipesPendentes; ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <p class="text-muted small mb-0">Gerenciar equipes cadastradas</p>
                         </div>
-                        <p class="text-muted small mb-0">Gerenciar equipes cadastradas</p>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-4 col-lg-3">
                 <div class="card quick-access-card info shadow-sm card-hover opacity-50" title="Em desenvolvimento">
