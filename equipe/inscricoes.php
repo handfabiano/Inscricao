@@ -86,22 +86,48 @@ $pageTitle = 'Inscrições em Competições';
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="<?php echo BASE_URL; ?>/public/css/style.css" rel="stylesheet">
     <style>
-        /* Corrigir opacidade do modal */
+        /* Sobrescrever estilos do style.css que interferem com Bootstrap Modal */
         .modal {
+            display: block !important;
             opacity: 1 !important;
+            z-index: 1055 !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            align-items: flex-start !important;
+            justify-content: center !important;
+            padding-top: 3rem !important;
+        }
+
+        .modal.show {
+            display: block !important;
+            opacity: 1 !important;
+        }
+
+        .modal:not(.show) {
+            display: none !important;
         }
 
         .modal-dialog {
             opacity: 1 !important;
+            z-index: 1056 !important;
+            margin: 1.75rem auto !important;
         }
 
         .modal-content {
             opacity: 1 !important;
             background: #ffffff !important;
+            z-index: 1057 !important;
+            position: relative;
+            border: 1px solid rgba(0,0,0,.2) !important;
+            border-radius: 0.5rem !important;
         }
 
         .modal-backdrop {
             opacity: 0.5 !important;
+            z-index: 1054 !important;
+        }
+
+        .modal-header {
+            opacity: 1 !important;
         }
 
         .modal-body {
@@ -110,6 +136,22 @@ $pageTitle = 'Inscrições em Competições';
 
         .modal-body * {
             opacity: 1 !important;
+        }
+
+        .modal-footer {
+            opacity: 1 !important;
+            pointer-events: all !important;
+        }
+
+        .modal-footer .btn {
+            opacity: 1 !important;
+            pointer-events: all !important;
+            cursor: pointer !important;
+        }
+
+        .modal-footer .btn:disabled {
+            opacity: 0.65 !important;
+            cursor: not-allowed !important;
         }
 
         .foto-circular {
@@ -135,10 +177,23 @@ $pageTitle = 'Inscrições em Competições';
             width: 1.25rem;
             height: 1.25rem;
             cursor: pointer;
+            opacity: 1 !important;
+            pointer-events: all !important;
         }
 
         .form-check-label {
             cursor: pointer;
+            opacity: 1 !important;
+        }
+
+        /* Garantir que todos os elementos interativos funcionem */
+        button, input, label, .btn, .btn-close {
+            opacity: 1 !important;
+            pointer-events: all !important;
+        }
+
+        .btn-close {
+            cursor: pointer !important;
         }
     </style>
 </head>
@@ -392,6 +447,7 @@ $pageTitle = 'Inscrições em Competições';
         let modalInstance = null;
 
         function abrirModalInscricao(id, nome, min, max, genero, categorias) {
+            console.log('Abrindo modal para competição:', nome);
             minAtletas = min;
             maxAtletas = max;
             generoPermitido = genero || '';
@@ -430,6 +486,17 @@ $pageTitle = 'Inscrições em Competições';
             const modalEl = document.getElementById('modalInscricao');
             modalInstance = new bootstrap.Modal(modalEl);
             modalInstance.show();
+
+            // Forçar opacidade dos botões após abrir o modal
+            setTimeout(() => {
+                const botoes = document.querySelectorAll('#modalInscricao .modal-footer .btn');
+                botoes.forEach(btn => {
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'all';
+                    btn.style.cursor = 'pointer';
+                });
+                console.log('Botões do modal configurados:', botoes.length);
+            }, 100);
         }
 
         function filtrarAtletasPorGenero() {
