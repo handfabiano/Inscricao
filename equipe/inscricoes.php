@@ -4,11 +4,21 @@
  * Equipe pode se inscrever em competições abertas
  */
 
-require_once __DIR__ . '/../config/config.php';
-requireEquipeLogin();
+// Habilitar exibição de erros para debug
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
 
-$pdo = getDBConnection();
-$equipeId = $_SESSION['equipe_id'];
+try {
+    require_once __DIR__ . '/../config/config.php';
+    requireEquipeLogin();
+
+    $pdo = getDBConnection();
+    $equipeId = $_SESSION['equipe_id'];
+} catch (Exception $e) {
+    die("Erro ao inicializar: " . $e->getMessage() . "<br>Linha: " . $e->getLine() . "<br>Arquivo: " . $e->getFile());
+}
+
 $erro = null;
 $competicoesAbertas = [];
 $atletasDisponiveis = [];
@@ -25,7 +35,7 @@ try {
 
     // Buscar competições abertas (inscrições abertas)
     $hoje = date('Y-m-d');
-    $stmt = $pdo->prepare("
+    $sqlCompeticoes = "
         SELECT
             c.*,
             m.nome as modalidade_nome,
@@ -38,22 +48,30 @@ try {
         AND c.data_inicio_inscricoes <= ?
         AND c.data_fim_inscricoes >= ?
         ORDER BY c.created_at DESC
-    ");
+    ";
+    $stmt = $pdo->prepare($sqlCompeticoes);
+    if (!$stmt) {
+        throw new Exception("Erro ao preparar query de competições: " . print_r($pdo->errorInfo(), true));
+    }
     $stmt->execute([$equipeId, $hoje, $hoje]);
     $competicoesAbertas = $stmt->fetchAll();
 
     // Buscar atletas ativos da equipe
-    $stmt = $pdo->prepare("
+    $sqlAtletas = "
         SELECT id, nome_completo, data_nascimento, genero, foto_path
         FROM atletas
         WHERE equipe_atual_id = ? AND ativo = 1
         ORDER BY nome_completo
-    ");
+    ";
+    $stmt = $pdo->prepare($sqlAtletas);
+    if (!$stmt) {
+        throw new Exception("Erro ao preparar query de atletas: " . print_r($pdo->errorInfo(), true));
+    }
     $stmt->execute([$equipeId]);
     $atletasDisponiveis = $stmt->fetchAll();
 
 } catch (Exception $e) {
-    $erro = $e->getMessage();
+    $erro = "Erro detalhado: " . $e->getMessage() . "<br>Linha: " . $e->getLine() . "<br>Arquivo: " . $e->getFile();
 }
 
 $pageTitle = 'Inscrições em Competições';
