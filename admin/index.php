@@ -380,15 +380,17 @@ $pageTitle = 'Dashboard Administrativo';
                 </a>
             </div>
             <div class="col-md-4 col-lg-3">
-                <div class="card quick-access-card danger shadow-sm card-hover opacity-50" title="Em desenvolvimento">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-chart-bar fa-2x text-danger me-3"></i>
-                            <h6 class="mb-0">Relatórios</h6>
+                <a href="relatorios.php" class="text-decoration-none">
+                    <div class="card quick-access-card danger shadow-sm card-hover">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-chart-bar fa-2x text-danger me-3"></i>
+                                <h6 class="mb-0">Relatórios</h6>
+                            </div>
+                            <p class="text-muted small mb-0">Gerar relatórios e estatísticas</p>
                         </div>
-                        <p class="text-muted small mb-0">Gerar relatórios e estatísticas</p>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-4 col-lg-3">
                 <a href="calendario.php" class="text-decoration-none">
@@ -417,15 +419,17 @@ $pageTitle = 'Dashboard Administrativo';
                 </a>
             </div>
             <div class="col-md-4 col-lg-3">
-                <div class="card quick-access-card warning shadow-sm card-hover opacity-50" title="Em desenvolvimento">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-cog fa-2x text-warning me-3"></i>
-                            <h6 class="mb-0">Configurações</h6>
+                <a href="configuracoes.php" class="text-decoration-none">
+                    <div class="card quick-access-card warning shadow-sm card-hover">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-cog fa-2x text-warning me-3"></i>
+                                <h6 class="mb-0">Configurações</h6>
+                            </div>
+                            <p class="text-muted small mb-0">Configurar sistema e usuários</p>
                         </div>
-                        <p class="text-muted small mb-0">Configurar sistema e usuários</p>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
