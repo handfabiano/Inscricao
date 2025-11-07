@@ -367,15 +367,17 @@ $pageTitle = 'Dashboard Administrativo';
                 </a>
             </div>
             <div class="col-md-4 col-lg-3">
-                <div class="card quick-access-card info shadow-sm card-hover opacity-50" title="Em desenvolvimento">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-running fa-2x text-info me-3"></i>
-                            <h6 class="mb-0">Atletas</h6>
+                <a href="atletas.php" class="text-decoration-none">
+                    <div class="card quick-access-card info shadow-sm card-hover">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-running fa-2x text-info me-3"></i>
+                                <h6 class="mb-0">Atletas</h6>
+                            </div>
+                            <p class="text-muted small mb-0">Ver todos os atletas cadastrados</p>
                         </div>
-                        <p class="text-muted small mb-0">Ver todos os atletas cadastrados</p>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-4 col-lg-3">
                 <div class="card quick-access-card danger shadow-sm card-hover opacity-50" title="Em desenvolvimento">
@@ -389,26 +391,30 @@ $pageTitle = 'Dashboard Administrativo';
                 </div>
             </div>
             <div class="col-md-4 col-lg-3">
-                <div class="card quick-access-card primary shadow-sm card-hover opacity-50" title="Em desenvolvimento">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-calendar-alt fa-2x text-primary me-3"></i>
-                            <h6 class="mb-0">Calendário</h6>
+                <a href="calendario.php" class="text-decoration-none">
+                    <div class="card quick-access-card primary shadow-sm card-hover">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-calendar-alt fa-2x text-primary me-3"></i>
+                                <h6 class="mb-0">Calendário</h6>
+                            </div>
+                            <p class="text-muted small mb-0">Ver calendário de eventos</p>
                         </div>
-                        <p class="text-muted small mb-0">Ver calendário de eventos</p>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-4 col-lg-3">
-                <div class="card quick-access-card success shadow-sm card-hover opacity-50" title="Em desenvolvimento">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-medal fa-2x text-success me-3"></i>
-                            <h6 class="mb-0">Resultados</h6>
+                <a href="resultados.php" class="text-decoration-none">
+                    <div class="card quick-access-card success shadow-sm card-hover">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-medal fa-2x text-success me-3"></i>
+                                <h6 class="mb-0">Resultados</h6>
+                            </div>
+                            <p class="text-muted small mb-0">Registrar resultados e rankings</p>
                         </div>
-                        <p class="text-muted small mb-0">Registrar resultados e rankings</p>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-md-4 col-lg-3">
                 <div class="card quick-access-card warning shadow-sm card-hover opacity-50" title="Em desenvolvimento">
