@@ -140,6 +140,32 @@ try {
     // Commit
     $pdo->commit();
 
+    // Enviar e-mail de confirmação à equipe
+    try {
+        // Buscar dados da equipe
+        $stmt = $pdo->prepare("
+            SELECT e.nome, e.email, e.responsavel_nome
+            FROM equipes e
+            WHERE e.id = ?
+        ");
+        $stmt->execute([$equipeId]);
+        $equipe = $stmt->fetch();
+
+        if ($equipe && !empty($equipe['email'])) {
+            require_once __DIR__ . '/../includes/email_helper.php';
+            emailInscricaoEquipe(
+                $equipe['nome'],
+                $competicao['nome'],
+                $protocolo,
+                $equipe['email'],
+                $equipe['responsavel_nome']
+            );
+        }
+    } catch (Exception $emailError) {
+        // Email falhou mas inscrição foi realizada, continua normalmente
+        error_log("Erro ao enviar email de confirmação: " . $emailError->getMessage());
+    }
+
     redirect(
         'minhas_inscricoes.php',
         "Inscrição realizada com sucesso! Protocolo: {$protocolo}",

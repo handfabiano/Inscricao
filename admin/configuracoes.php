@@ -71,6 +71,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $mensagem = "$linhasApagadas registros de log foram removidos.";
             $tipoMensagem = "info";
+
+        } elseif ($acao === 'configurar_email') {
+            // Criar tabela se não existir
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS config_email (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    smtp_host VARCHAR(255) NOT NULL,
+                    smtp_port INT NOT NULL DEFAULT 587,
+                    smtp_username VARCHAR(255) NOT NULL,
+                    smtp_password VARCHAR(255) NOT NULL,
+                    smtp_secure VARCHAR(10) DEFAULT 'tls',
+                    email_remetente VARCHAR(255) NOT NULL,
+                    nome_remetente VARCHAR(255) NOT NULL,
+                    ativo BOOLEAN DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+
+            // Verificar se já existe configuração
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM config_email");
+            $existe = $stmt->fetch()['total'] > 0;
+
+            if ($existe) {
+                // Atualizar configuração existente
+                $stmt = $pdo->prepare("
+                    UPDATE config_email SET
+                        smtp_host = ?,
+                        smtp_port = ?,
+                        smtp_username = ?,
+                        smtp_password = ?,
+                        smtp_secure = ?,
+                        email_remetente = ?,
+                        nome_remetente = ?,
+                        ativo = ?
+                    WHERE id = 1
+                ");
+            } else {
+                // Inserir nova configuração
+                $stmt = $pdo->prepare("
+                    INSERT INTO config_email (
+                        smtp_host, smtp_port, smtp_username, smtp_password,
+                        smtp_secure, email_remetente, nome_remetente, ativo
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+            }
+
+            $stmt->execute([
+                $_POST['smtp_host'],
+                (int)$_POST['smtp_port'],
+                $_POST['smtp_username'],
+                $_POST['smtp_password'],
+                $_POST['smtp_secure'],
+                $_POST['email_remetente'],
+                $_POST['nome_remetente'],
+                isset($_POST['ativo']) ? 1 : 0
+            ]);
+
+            $mensagem = "Configurações de e-mail salvas com sucesso!";
+            $tipoMensagem = "success";
+
+        } elseif ($acao === 'testar_email') {
+            require_once '../includes/email_helper.php';
+
+            $emailTeste = $_POST['email_teste'];
+            $resultado = enviarEmail(
+                $emailTeste,
+                'Teste de Configuração SMTP',
+                '<h2>Teste de E-mail</h2><p>Se você recebeu este e-mail, as configurações SMTP estão funcionando corretamente!</p><p><strong>Data/Hora:</strong> ' . date('d/m/Y H:i:s') . '</p>',
+                'Usuário Teste'
+            );
+
+            if ($resultado) {
+                $mensagem = "E-mail de teste enviado com sucesso para " . htmlspecialchars($emailTeste);
+                $tipoMensagem = "success";
+            } else {
+                $mensagem = "Erro ao enviar e-mail de teste. Verifique as configurações SMTP.";
+                $tipoMensagem = "danger";
+            }
         }
 
     } catch (Exception $e) {
@@ -85,6 +164,15 @@ try {
     $administradores = $stmt->fetchAll();
 } catch (Exception $e) {
     $administradores = [];
+}
+
+// Buscar configuração de e-mail
+$configEmail = null;
+try {
+    $stmt = $pdo->query("SELECT * FROM config_email WHERE id = 1 LIMIT 1");
+    $configEmail = $stmt->fetch();
+} catch (Exception $e) {
+    // Tabela ainda não existe
 }
 
 // Buscar estatísticas do sistema
@@ -392,6 +480,41 @@ try {
                     </div>
                 </div>
 
+                <!-- Configurações de E-mail -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary bg-opacity-10">
+                        <h5 class="mb-0">
+                            <i class="fas fa-envelope-open-text text-primary"></i>
+                            Configurações de E-mail (SMTP)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if ($configEmail): ?>
+                            <div class="alert alert-success alert-sm">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Status:</strong> <?php echo $configEmail['ativo'] ? 'Ativo' : 'Inativo'; ?>
+                            </div>
+                            <p class="small mb-2"><strong>Servidor:</strong> <?php echo htmlspecialchars($configEmail['smtp_host']); ?>:<?php echo $configEmail['smtp_port']; ?></p>
+                            <p class="small mb-2"><strong>Remetente:</strong> <?php echo htmlspecialchars($configEmail['email_remetente']); ?></p>
+                        <?php else: ?>
+                            <div class="alert alert-warning alert-sm">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                E-mail ainda não configurado
+                            </div>
+                        <?php endif; ?>
+                        <div class="d-grid gap-2 mt-3">
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalConfigurarEmail">
+                                <i class="fas fa-cog"></i> <?php echo $configEmail ? 'Editar' : 'Configurar'; ?> SMTP
+                            </button>
+                            <?php if ($configEmail && $configEmail['ativo']): ?>
+                            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#modalTestarEmail">
+                                <i class="fas fa-paper-plane"></i> Enviar E-mail de Teste
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Ações do Sistema -->
                 <div class="card shadow-sm">
                     <div class="card-header bg-warning bg-opacity-10">
@@ -583,6 +706,129 @@ try {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Configurar E-mail -->
+    <div class="modal fade" id="modalConfigurarEmail" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST">
+                    <input type="hidden" name="acao" value="configurar_email">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-envelope-open-text"></i> Configurações de E-mail SMTP</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Atenção:</strong> Configure o servidor SMTP para enviar e-mails de confirmação aos atletas e equipes.
+                            Para Gmail, use: smtp.gmail.com (porta 587) e ative "Acesso a apps menos seguros" ou use senha de app.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Servidor SMTP</label>
+                                <input type="text" name="smtp_host" class="form-control"
+                                    value="<?php echo $configEmail['smtp_host'] ?? 'smtp.gmail.com'; ?>"
+                                    placeholder="smtp.gmail.com" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Porta</label>
+                                <input type="number" name="smtp_port" class="form-control"
+                                    value="<?php echo $configEmail['smtp_port'] ?? 587; ?>" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Usuário/E-mail SMTP</label>
+                            <input type="text" name="smtp_username" class="form-control"
+                                value="<?php echo $configEmail['smtp_username'] ?? ''; ?>"
+                                placeholder="seu-email@gmail.com" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Senha SMTP</label>
+                            <input type="password" name="smtp_password" class="form-control"
+                                value="<?php echo $configEmail['smtp_password'] ?? ''; ?>"
+                                placeholder="Senha ou senha de app" required>
+                            <small class="text-muted">Para Gmail, recomenda-se usar senha de app</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Criptografia</label>
+                            <select name="smtp_secure" class="form-select" required>
+                                <option value="tls" <?php echo (!$configEmail || $configEmail['smtp_secure'] === 'tls') ? 'selected' : ''; ?>>TLS (Recomendado - Porta 587)</option>
+                                <option value="ssl" <?php echo ($configEmail && $configEmail['smtp_secure'] === 'ssl') ? 'selected' : ''; ?>>SSL (Porta 465)</option>
+                            </select>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label class="form-label">E-mail Remetente</label>
+                            <input type="email" name="email_remetente" class="form-control"
+                                value="<?php echo $configEmail['email_remetente'] ?? ''; ?>"
+                                placeholder="noreply@exemplo.com" required>
+                            <small class="text-muted">E-mail que aparecerá como remetente nas mensagens</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Nome do Remetente</label>
+                            <input type="text" name="nome_remetente" class="form-control"
+                                value="<?php echo $configEmail['nome_remetente'] ?? 'Sistema de Competições'; ?>"
+                                placeholder="Sistema de Competições" required>
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="ativo" id="emailAtivo"
+                                <?php echo (!$configEmail || $configEmail['ativo']) ? 'checked' : ''; ?>>
+                            <label class="form-check-label" for="emailAtivo">
+                                Sistema de e-mail ativo
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Salvar Configurações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Testar E-mail -->
+    <div class="modal fade" id="modalTestarEmail" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST">
+                    <input type="hidden" name="acao" value="testar_email">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title"><i class="fas fa-paper-plane"></i> Enviar E-mail de Teste</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Um e-mail de teste será enviado para verificar se as configurações estão corretas.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">E-mail de Destino</label>
+                            <input type="email" name="email_teste" class="form-control"
+                                placeholder="seu-email@exemplo.com" required>
+                            <small class="text-muted">Digite o e-mail onde deseja receber o teste</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-info">
+                            <i class="fas fa-paper-plane"></i> Enviar E-mail de Teste
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

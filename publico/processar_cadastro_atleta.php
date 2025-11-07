@@ -144,6 +144,19 @@ try {
     // Confirmar transação
     $pdo->commit();
 
+    // Enviar e-mail de confirmação ao atleta
+    try {
+        require_once '../includes/email_helper.php';
+        emailCadastroAtleta(
+            $_POST['nome_completo'],
+            $convite['equipe_nome'],
+            $_POST['email']
+        );
+    } catch (Exception $emailError) {
+        // Email falhou mas cadastro foi realizado, continua normalmente
+        error_log("Erro ao enviar email de confirmação: " . $emailError->getMessage());
+    }
+
     // Redirecionar para página de sucesso
     $sucessoUrl = "cadastro_sucesso.php?equipe=" . urlencode($convite['equipe_nome']);
     header("Location: $sucessoUrl");
