@@ -1,8 +1,17 @@
 <?php
-require_once '../config/config.php';
-requireAdminLogin();
+// Habilitar exibição de erros para debug
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
 
-$pdo = getDBConnection();
+try {
+    require_once '../config/config.php';
+    requireAdminLogin();
+
+    $pdo = getDBConnection();
+} catch (Exception $e) {
+    die("Erro ao inicializar: " . $e->getMessage() . "<br>Linha: " . $e->getLine() . "<br>Arquivo: " . $e->getFile());
+}
 
 // Processar aprovação/rejeição de inscrição
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao'])) {
@@ -30,14 +39,18 @@ $filtroEquipe = $_GET['equipe'] ?? '';
 $filtroStatus = $_GET['status'] ?? '';
 
 // Buscar estatísticas
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes WHERE status = 'Pendente'");
-$totalPendentes = $stmt->fetch()['total'];
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes WHERE status = 'Pendente'");
+    $totalPendentes = $stmt->fetch()['total'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes WHERE status = 'Confirmada'");
-$totalConfirmadas = $stmt->fetch()['total'];
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes WHERE status = 'Confirmada'");
+    $totalConfirmadas = $stmt->fetch()['total'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes WHERE status = 'Cancelada'");
-$totalCanceladas = $stmt->fetch()['total'];
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes WHERE status = 'Cancelada'");
+    $totalCanceladas = $stmt->fetch()['total'];
+} catch (Exception $e) {
+    die("Erro ao buscar estatísticas: " . $e->getMessage());
+}
 
 // Construir query de inscrições com filtros
 $sql = "
@@ -75,12 +88,20 @@ if (!empty($filtroStatus)) {
 
 $sql .= " ORDER BY i.created_at DESC";
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$inscricoes = $stmt->fetchAll();
+try {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $inscricoes = $stmt->fetchAll();
+} catch (Exception $e) {
+    die("Erro ao buscar inscrições: " . $e->getMessage() . "<br><br>SQL: " . $sql);
+}
 
 // Buscar competições para filtro
-$competicoes = $pdo->query("SELECT id, nome FROM competicoes ORDER BY created_at DESC")->fetchAll();
+try {
+    $competicoes = $pdo->query("SELECT id, nome FROM competicoes ORDER BY created_at DESC")->fetchAll();
+} catch (Exception $e) {
+    die("Erro ao buscar competições: " . $e->getMessage());
+}
 
 $pageTitle = 'Gerenciar Inscrições';
 ?>
