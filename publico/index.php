@@ -1,50 +1,76 @@
 <?php
-require_once '../config/config.php';
+// Habilitar exibição de erros para debug
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-$pdo = getDBConnection();
+try {
+    require_once '../config/config.php';
+    $pdo = getDBConnection();
+} catch (Exception $e) {
+    die("Erro ao conectar ao banco de dados: " . $e->getMessage());
+}
 
 // Buscar competições abertas
-$stmt = $pdo->query("
-    SELECT * FROM competicoes
-    WHERE status = 'Aberta'
-    ORDER BY data_inicio_inscricao DESC
-    LIMIT 6
-");
-$competicoesAbertas = $stmt->fetchAll();
+try {
+    $stmt = $pdo->query("
+        SELECT * FROM competicoes
+        WHERE status = 'Aberta'
+        ORDER BY data_inicio_inscricao DESC
+        LIMIT 6
+    ");
+    $competicoesAbertas = $stmt->fetchAll();
+} catch (Exception $e) {
+    $competicoesAbertas = [];
+}
 
 // Buscar próximas competições
-$stmt = $pdo->query("
-    SELECT * FROM competicoes
-    WHERE data_inicio_evento >= CURDATE()
-    ORDER BY data_inicio_evento ASC
-    LIMIT 6
-");
-$proximasCompeticoes = $stmt->fetchAll();
+try {
+    $stmt = $pdo->query("
+        SELECT * FROM competicoes
+        WHERE data_inicio_evento >= CURDATE()
+        ORDER BY data_inicio_evento ASC
+        LIMIT 6
+    ");
+    $proximasCompeticoes = $stmt->fetchAll();
+} catch (Exception $e) {
+    $proximasCompeticoes = [];
+}
 
 // Buscar resultados recentes (competições com resultados)
-$stmt = $pdo->query("
-    SELECT DISTINCT c.*, COUNT(DISTINCT i.id) as total_inscritos
-    FROM competicoes c
-    INNER JOIN inscricoes_competicoes i ON c.id = i.competicao_id
-    WHERE i.colocacao IS NOT NULL
-    GROUP BY c.id
-    ORDER BY c.data_inicio_evento DESC
-    LIMIT 6
-");
-$resultadosRecentes = $stmt->fetchAll();
+try {
+    $stmt = $pdo->query("
+        SELECT DISTINCT c.*, COUNT(DISTINCT i.id) as total_inscritos
+        FROM competicoes c
+        INNER JOIN inscricoes_competicoes i ON c.id = i.competicao_id
+        WHERE i.colocacao IS NOT NULL
+        GROUP BY c.id
+        ORDER BY c.data_inicio_evento DESC
+        LIMIT 6
+    ");
+    $resultadosRecentes = $stmt->fetchAll();
+} catch (Exception $e) {
+    $resultadosRecentes = [];
+}
 
 // Estatísticas gerais
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM competicoes");
-$totalCompeticoes = $stmt->fetch()['total'];
+try {
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM competicoes");
+    $totalCompeticoes = $stmt->fetch()['total'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes WHERE status = 'Aprovada'");
-$totalEquipes = $stmt->fetch()['total'];
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes WHERE status = 'Aprovada'");
+    $totalEquipes = $stmt->fetch()['total'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas WHERE ativo = 1");
-$totalAtletas = $stmt->fetch()['total'];
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas WHERE ativo = 1");
+    $totalAtletas = $stmt->fetch()['total'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes WHERE status = 'Confirmada'");
-$totalInscricoes = $stmt->fetch()['total'];
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes WHERE status = 'Confirmada'");
+    $totalInscricoes = $stmt->fetch()['total'];
+} catch (Exception $e) {
+    $totalCompeticoes = 0;
+    $totalEquipes = 0;
+    $totalAtletas = 0;
+    $totalInscricoes = 0;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -106,21 +132,6 @@ $totalInscricoes = $stmt->fetch()['total'];
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="competicoes.php">
-                            <i class="fas fa-trophy"></i> Competições
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="resultados.php">
-                            <i class="fas fa-medal"></i> Resultados
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="calendario.php">
-                            <i class="fas fa-calendar"></i> Calendário
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="../equipe/login.php">
                             <i class="fas fa-sign-in-alt"></i> Login Equipe
                         </a>
@@ -148,11 +159,11 @@ $totalInscricoes = $stmt->fetch()['total'];
                         Plataforma completa para gerenciamento de competições, inscrições de equipes e publicação de resultados
                     </p>
                     <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                        <a href="competicoes.php" class="btn btn-light btn-lg px-4">
-                            <i class="fas fa-trophy"></i> Ver Competições
+                        <a href="../equipe/login.php" class="btn btn-light btn-lg px-4">
+                            <i class="fas fa-users"></i> Área da Equipe
                         </a>
-                        <a href="resultados.php" class="btn btn-outline-light btn-lg px-4">
-                            <i class="fas fa-medal"></i> Ver Resultados
+                        <a href="../admin/login.php" class="btn btn-outline-light btn-lg px-4">
+                            <i class="fas fa-shield-alt"></i> Área Admin
                         </a>
                     </div>
                 </div>
@@ -163,6 +174,12 @@ $totalInscricoes = $stmt->fetch()['total'];
     <!-- Estatísticas -->
     <section class="py-5 bg-light">
         <div class="container">
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h2 class="fw-bold">Estatísticas do Sistema</h2>
+                    <p class="text-muted">Números atualizados em tempo real</p>
+                </div>
+            </div>
             <div class="row g-4">
                 <div class="col-md-3">
                     <div class="card stat-card shadow-sm border-0" style="border-left-color: #667eea;">
@@ -249,18 +266,23 @@ $totalInscricoes = $stmt->fetch()['total'];
                             </div>
                         </div>
                         <div class="card-footer bg-transparent">
-                            <a href="detalhes_competicao.php?id=<?php echo $comp['id']; ?>" class="btn btn-primary btn-sm w-100">
-                                <i class="fas fa-info-circle"></i> Ver Detalhes
+                            <a href="../equipe/login.php" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-sign-in-alt"></i> Fazer Login para Inscrever
                             </a>
                         </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
             </div>
-            <div class="text-center mt-4">
-                <a href="competicoes.php" class="btn btn-outline-primary">
-                    Ver Todas as Competições <i class="fas fa-arrow-right"></i>
-                </a>
+        </div>
+    </section>
+    <?php else: ?>
+    <section class="py-5">
+        <div class="container">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <h5>Nenhuma competição com inscrições abertas no momento</h5>
+                <p class="mb-0">Em breve teremos novas competições disponíveis!</p>
             </div>
         </div>
     </section>
@@ -305,75 +327,16 @@ $totalInscricoes = $stmt->fetch()['total'];
                                 </p>
                             </div>
                         </div>
-                        <div class="card-footer bg-transparent">
-                            <a href="detalhes_competicao.php?id=<?php echo $comp['id']; ?>" class="btn btn-outline-primary btn-sm w-100">
-                                <i class="fas fa-info-circle"></i> Ver Detalhes
-                            </a>
-                        </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
-            </div>
-        </div>
-    </section>
-    <?php endif; ?>
-
-    <!-- Resultados Recentes -->
-    <?php if (!empty($resultadosRecentes)): ?>
-    <section class="py-5">
-        <div class="container">
-            <div class="row mb-4">
-                <div class="col-12 text-center">
-                    <h2 class="fw-bold">
-                        <i class="fas fa-medal text-warning"></i>
-                        Resultados Recentes
-                    </h2>
-                    <p class="text-muted">Confira os resultados das últimas competições</p>
-                </div>
-            </div>
-            <div class="row g-4">
-                <?php foreach (array_slice($resultadosRecentes, 0, 3) as $comp): ?>
-                <div class="col-md-4">
-                    <div class="card competicao-card shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <span class="badge bg-success">Finalizada</span>
-                                <span class="badge bg-info"><?php echo htmlspecialchars($comp['modalidade']); ?></span>
-                            </div>
-                            <h5 class="card-title"><?php echo htmlspecialchars($comp['nome']); ?></h5>
-                            <hr>
-                            <div class="small">
-                                <p class="mb-2">
-                                    <i class="fas fa-calendar text-primary"></i>
-                                    <strong>Realizado em:</strong>
-                                    <?php echo date('d/m/Y', strtotime($comp['data_inicio_evento'])); ?>
-                                </p>
-                                <p class="mb-2">
-                                    <i class="fas fa-users text-info"></i>
-                                    <strong>Participantes:</strong> <?php echo $comp['total_inscritos']; ?> equipes
-                                </p>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <a href="ver_resultados.php?id=<?php echo $comp['id']; ?>" class="btn btn-warning btn-sm w-100">
-                                <i class="fas fa-trophy"></i> Ver Resultados
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <div class="text-center mt-4">
-                <a href="resultados.php" class="btn btn-outline-warning">
-                    Ver Todos os Resultados <i class="fas fa-arrow-right"></i>
-                </a>
             </div>
         </div>
     </section>
     <?php endif; ?>
 
     <!-- Features -->
-    <section class="py-5 bg-light">
+    <section class="py-5">
         <div class="container">
             <div class="row mb-4">
                 <div class="col-12 text-center">
@@ -407,8 +370,24 @@ $totalInscricoes = $stmt->fetch()['total'];
         </div>
     </section>
 
+    <!-- Call to Action -->
+    <section class="py-5 bg-dark text-white">
+        <div class="container text-center">
+            <h2 class="mb-4">Pronto para Participar?</h2>
+            <p class="lead mb-4">Faça login ou cadastre sua equipe para começar a participar das competições</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <a href="../equipe/login.php" class="btn btn-primary btn-lg px-4">
+                    <i class="fas fa-user-plus"></i> Área da Equipe
+                </a>
+                <a href="../admin/login.php" class="btn btn-outline-light btn-lg px-4">
+                    <i class="fas fa-shield-alt"></i> Acesso Admin
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
-    <footer class="bg-dark text-white py-4">
+    <footer class="bg-light py-4">
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
@@ -416,19 +395,15 @@ $totalInscricoes = $stmt->fetch()['total'];
                     <p class="text-muted">Plataforma completa para gestão de eventos esportivos</p>
                 </div>
                 <div class="col-md-3">
-                    <h6>Links Rápidos</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="competicoes.php" class="text-muted text-decoration-none">Competições</a></li>
-                        <li><a href="resultados.php" class="text-muted text-decoration-none">Resultados</a></li>
-                        <li><a href="calendario.php" class="text-muted text-decoration-none">Calendário</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3">
-                    <h6>Acesso</h6>
+                    <h6>Acesso Rápido</h6>
                     <ul class="list-unstyled">
                         <li><a href="../equipe/login.php" class="text-muted text-decoration-none">Login Equipe</a></li>
                         <li><a href="../admin/login.php" class="text-muted text-decoration-none">Login Admin</a></li>
                     </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>Informações</h6>
+                    <p class="text-muted small">Sistema desenvolvido para facilitar a gestão de competições esportivas</p>
                 </div>
             </div>
             <hr class="bg-secondary">
