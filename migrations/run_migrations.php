@@ -17,7 +17,14 @@ echo "======================================\n\n";
 // Lista de migrations na ordem correta
 $migrations = [
     '001_create_multi_tenancy_structure.sql',
-    '002_add_organization_id_to_existing_tables.sql'
+    '002_add_organization_id_to_existing_tables.sql',
+    '003_create_payment_system.sql',
+    '004_add_2fa_support.sql',
+    '005_create_championship_system.sql',
+    '006_create_statistics_system.sql',
+    '007_create_ranking_system.sql',
+    '008_create_analytics_system.sql',
+    '009_create_integrations_system.sql'
 ];
 
 try {
