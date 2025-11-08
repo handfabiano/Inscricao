@@ -155,16 +155,24 @@ $pageTitle = 'Convites para Atletas';
             <?php if (isset($ultimoToken)): ?>
                 <hr>
                 <p class="mb-2"><strong>Link do convite:</strong></p>
-                <div class="link-convite mb-2">
+                <div class="link-convite mb-2" id="linkConvite">
                     <?php
-                    $linkConvite = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") .
-                                   "://" . $_SERVER['HTTP_HOST'] .
-                                   dirname(dirname($_SERVER['PHP_SELF'])) .
-                                   "/publico/cadastro_atleta.php?token=" . $ultimoToken;
-                    echo $linkConvite;
+                    // Obter o protocolo
+                    $protocolo = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
+
+                    // Obter o host
+                    $host = $_SERVER['HTTP_HOST'];
+
+                    // Obter o caminho base (remove /equipe/convites_atletas.php)
+                    $scriptName = $_SERVER['SCRIPT_NAME']; // Ex: /Inscricao/equipe/convites_atletas.php
+                    $basePath = str_replace('/equipe/convites_atletas.php', '', $scriptName);
+
+                    // Construir URL completa
+                    $linkConvite = $protocolo . "://" . $host . $basePath . "/publico/cadastro_atleta.php?token=" . $ultimoToken;
+                    echo htmlspecialchars($linkConvite);
                     ?>
                 </div>
-                <button class="btn btn-sm btn-success" onclick="copiarLink('<?php echo $linkConvite; ?>')">
+                <button class="btn btn-sm btn-success" onclick="copiarLink()">
                     <i class="fas fa-copy"></i> Copiar Link
                 </button>
             <?php endif; ?>
@@ -313,12 +321,17 @@ $pageTitle = 'Convites para Atletas';
                                         <div class="col-md-4 text-end">
                                             <?php if ($convite['status'] === 'Pendente' && strtotime($convite['validade_ate']) > time()): ?>
                                                 <?php
-                                                $linkConvite = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") .
-                                                               "://" . $_SERVER['HTTP_HOST'] .
-                                                               dirname(dirname($_SERVER['PHP_SELF'])) .
-                                                               "/publico/cadastro_atleta.php?token=" . $convite['token'];
+                                                // Obter o protocolo
+                                                $protocolo = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
+                                                // Obter o host
+                                                $host = $_SERVER['HTTP_HOST'];
+                                                // Obter o caminho base
+                                                $scriptName = $_SERVER['SCRIPT_NAME'];
+                                                $basePath = str_replace('/equipe/convites_atletas.php', '', $scriptName);
+                                                // Construir URL completa
+                                                $linkConvite = $protocolo . "://" . $host . $basePath . "/publico/cadastro_atleta.php?token=" . $convite['token'];
                                                 ?>
-                                                <button class="btn btn-sm btn-success mb-1 w-100" onclick="copiarLink('<?php echo $linkConvite; ?>')">
+                                                <button class="btn btn-sm btn-success mb-1 w-100" onclick="copiarLinkParam('<?php echo htmlspecialchars($linkConvite); ?>')">
                                                     <i class="fas fa-copy"></i> Copiar Link
                                                 </button>
                                                 <form method="POST" class="d-inline">
@@ -349,12 +362,49 @@ $pageTitle = 'Convites para Atletas';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function copiarLink(link) {
-            navigator.clipboard.writeText(link).then(function() {
+        // Função para copiar link do elemento #linkConvite
+        function copiarLink() {
+            const linkElement = document.getElementById('linkConvite');
+            if (linkElement) {
+                const link = linkElement.textContent.trim();
+                copiarTexto(link);
+            }
+        }
+
+        // Função para copiar link recebido como parâmetro
+        function copiarLinkParam(link) {
+            copiarTexto(link);
+        }
+
+        // Função auxiliar para copiar texto
+        function copiarTexto(texto) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(texto).then(function() {
+                    alert('Link copiado para a área de transferência!');
+                }, function(err) {
+                    // Fallback para método antigo
+                    usarFallback(texto);
+                });
+            } else {
+                usarFallback(texto);
+            }
+        }
+
+        // Fallback para navegadores que não suportam clipboard API
+        function usarFallback(texto) {
+            const textArea = document.createElement('textarea');
+            textArea.value = texto;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
                 alert('Link copiado para a área de transferência!');
-            }, function() {
-                prompt('Copie o link abaixo:', link);
-            });
+            } catch (err) {
+                prompt('Copie o link abaixo:', texto);
+            }
+            document.body.removeChild(textArea);
         }
     </script>
 </body>
