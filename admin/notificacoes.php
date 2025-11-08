@@ -28,16 +28,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     assunto VARCHAR(255),
                     mensagem TEXT,
                     enviado_por INT,
+                    total_enviados INT DEFAULT 0,
+                    total_erros INT DEFAULT 0,
                     status VARCHAR(20) DEFAULT 'Pendente',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (enviado_por) REFERENCES administradores(id)
                 )
             ");
 
+            // Registrar notificação
             $stmt = $pdo->prepare("
                 INSERT INTO notificacoes_email
                 (tipo_destinatario, destinatarios, assunto, mensagem, enviado_por, status)
-                VALUES (?, ?, ?, ?, ?, 'Agendado')
+                VALUES (?, ?, ?, ?, ?, 'Processando')
             ");
             $stmt->execute([
                 $tipoDestinatario,
@@ -46,9 +49,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensagemEmail,
                 $_SESSION['admin_id']
             ]);
+            $notificacaoId = $pdo->lastInsertId();
 
-            $mensagem = "Notificação agendada com sucesso! (Em produção, os e-mails seriam enviados automaticamente)";
-            $tipoMensagem = "success";
+            // Determinar lista de e-mails para envio
+            $emailsEnviar = [];
+
+            if ($tipoDestinatario === 'Todas as Equipes') {
+                $stmt = $pdo->query("SELECT nome, email, responsavel_nome FROM equipes WHERE status = 'Aprovada' AND email != ''");
+                $emailsEnviar = $stmt->fetchAll();
+            } elseif ($tipoDestinatario === 'Equipe Específica') {
+                $stmt = $pdo->prepare("SELECT nome, email, responsavel_nome FROM equipes WHERE email = ?");
+                $stmt->execute([$destinatarios]);
+                $resultado = $stmt->fetch();
+                if ($resultado) {
+                    $emailsEnviar = [$resultado];
+                }
+            } elseif ($tipoDestinatario === 'Equipes com Inscrição Pendente') {
+                $stmt = $pdo->query("
+                    SELECT DISTINCT e.nome, e.email, e.responsavel_nome
+                    FROM equipes e
+                    INNER JOIN inscricoes_competicoes i ON e.id = i.equipe_id
+                    WHERE i.status = 'Pendente' AND e.email != ''
+                ");
+                $emailsEnviar = $stmt->fetchAll();
+            }
+
+            // Enviar e-mails
+            require_once '../includes/email_helper.php';
+            $totalEnviados = 0;
+            $totalErros = 0;
+
+            // Converter quebras de linha para HTML
+            $corpoHtml = nl2br(htmlspecialchars($mensagemEmail));
+            $corpoHtml = "
+                <div style='font-family: Arial, sans-serif;'>
+                    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;'>
+                        <h2 style='margin: 0;'>Sistema de Competições Esportivas</h2>
+                    </div>
+                    <div style='padding: 30px; background-color: #f8f9fa;'>
+                        <div style='background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+                            {$corpoHtml}
+                        </div>
+                    </div>
+                    <div style='background-color: #343a40; color: #adb5bd; padding: 20px; text-align: center; font-size: 12px;'>
+                        <p style='margin: 0;'>&copy; 2025 Sistema de Gestão de Competições Esportivas</p>
+                    </div>
+                </div>
+            ";
+
+            foreach ($emailsEnviar as $equipe) {
+                try {
+                    $resultado = enviarEmail(
+                        $equipe['email'],
+                        $assunto,
+                        $corpoHtml,
+                        $equipe['responsavel_nome'] ?? $equipe['nome']
+                    );
+
+                    if ($resultado) {
+                        $totalEnviados++;
+                    } else {
+                        $totalErros++;
+                    }
+                } catch (Exception $e) {
+                    $totalErros++;
+                    error_log("Erro ao enviar e-mail para {$equipe['email']}: " . $e->getMessage());
+                }
+            }
+
+            // Atualizar status da notificação
+            $statusFinal = $totalErros > 0 ? 'Enviado com Erros' : 'Enviado';
+            if ($totalEnviados === 0 && $totalErros > 0) {
+                $statusFinal = 'Erro';
+            }
+
+            $stmt = $pdo->prepare("
+                UPDATE notificacoes_email
+                SET status = ?, total_enviados = ?, total_erros = ?
+                WHERE id = ?
+            ");
+            $stmt->execute([$statusFinal, $totalEnviados, $totalErros, $notificacaoId]);
+
+            if ($totalEnviados > 0) {
+                $mensagem = "Notificação enviada! Total: {$totalEnviados} e-mail(s) enviado(s)";
+                if ($totalErros > 0) {
+                    $mensagem .= " ({$totalErros} erro(s))";
+                }
+                $tipoMensagem = "success";
+            } else {
+                $mensagem = "Erro ao enviar notificações. Verifique as configurações de e-mail.";
+                $tipoMensagem = "danger";
+            }
 
         } elseif ($acao === 'marcar_lida') {
             $notificacaoId = $_POST['notificacao_id'];
@@ -102,9 +193,11 @@ $equipes = $stmt->fetchAll();
 $stmt = $pdo->query("
     SELECT
         COUNT(*) as total,
-        SUM(CASE WHEN status = 'Agendado' THEN 1 ELSE 0 END) as agendadas,
-        SUM(CASE WHEN status = 'Enviado' THEN 1 ELSE 0 END) as enviadas,
-        SUM(CASE WHEN status = 'Erro' THEN 1 ELSE 0 END) as erros
+        SUM(CASE WHEN status IN ('Processando', 'Agendado') THEN 1 ELSE 0 END) as agendadas,
+        SUM(CASE WHEN status IN ('Enviado', 'Enviado com Erros') THEN 1 ELSE 0 END) as enviadas,
+        SUM(CASE WHEN status = 'Erro' THEN 1 ELSE 0 END) as erros,
+        COALESCE(SUM(total_enviados), 0) as total_emails_enviados,
+        COALESCE(SUM(total_erros), 0) as total_emails_erros
     FROM notificacoes_email
 ");
 $stats = $stmt->fetch();
@@ -279,8 +372,9 @@ $stats = $stmt->fetch();
                                     <div>
                                         <?php
                                         $badgeClass = match($notif['status']) {
-                                            'Agendado' => 'bg-warning text-dark',
+                                            'Agendado', 'Processando' => 'bg-warning text-dark',
                                             'Enviado' => 'bg-success',
+                                            'Enviado com Erros' => 'bg-info',
                                             'Erro' => 'bg-danger',
                                             default => 'bg-secondary'
                                         };
@@ -288,6 +382,9 @@ $stats = $stmt->fetch();
                                         <span class="badge <?php echo $badgeClass; ?>">
                                             <?php echo htmlspecialchars($notif['status']); ?>
                                         </span>
+                                        <?php if (isset($notif['total_enviados']) && $notif['total_enviados'] > 0): ?>
+                                            <br><small class="text-muted"><?php echo $notif['total_enviados']; ?> enviado(s)</small>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <p class="mb-2"><strong>Tipo:</strong> <?php echo htmlspecialchars($notif['tipo_destinatario']); ?></p>
@@ -356,9 +453,13 @@ $stats = $stmt->fetch();
                             <i class="fas fa-users text-primary"></i>
                             <strong>Equipes cadastradas:</strong> <?php echo count($equipes); ?>
                         </p>
+                        <p class="small mb-2">
+                            <i class="fas fa-envelope text-success"></i>
+                            <strong>E-mails enviados:</strong> <?php echo $stats['total_emails_enviados'] ?? 0; ?>
+                        </p>
                         <p class="small mb-0">
-                            <i class="fas fa-exclamation-triangle text-danger"></i>
-                            <strong>Nota:</strong> Em ambiente de produção, configure SMTP para envio real de e-mails.
+                            <i class="fas fa-info-circle text-info"></i>
+                            <strong>Nota:</strong> Configure SMTP em "Configurações" para ativar envio de e-mails.
                         </p>
                     </div>
                 </div>
@@ -410,7 +511,7 @@ $stats = $stmt->fetch();
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane"></i> Agendar Notificação
+                            <i class="fas fa-paper-plane"></i> Enviar Notificação
                         </button>
                     </div>
                 </form>
