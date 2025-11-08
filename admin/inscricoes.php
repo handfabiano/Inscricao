@@ -10,13 +10,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao'])) {
     $acao = $_POST['acao'];
 
     try {
+        // Buscar dados da inscrição para o e-mail
+        $stmt = $pdo->prepare("
+            SELECT
+                i.protocolo,
+                c.nome as competicao_nome,
+                c.local as competicao_local,
+                c.data_inicio as competicao_data,
+                e.nome as equipe_nome,
+                e.email as equipe_email,
+                e.responsavel_nome
+            FROM inscricoes_competicoes i
+            INNER JOIN competicoes c ON i.competicao_id = c.id
+            INNER JOIN equipes e ON i.equipe_id = e.id
+            WHERE i.id = ?
+        ");
+        $stmt->execute([$inscricaoId]);
+        $dadosInscricao = $stmt->fetch();
+
         if ($acao === 'aprovar') {
             $stmt = $pdo->prepare("UPDATE inscricoes_competicoes SET status = 'Confirmada' WHERE id = ?");
             $stmt->execute([$inscricaoId]);
+
+            // Enviar e-mail de aprovação
+            if ($dadosInscricao && !empty($dadosInscricao['equipe_email'])) {
+                try {
+                    require_once '../includes/email_helper.php';
+                    emailAprovacaoInscricao(
+                        $dadosInscricao['equipe_nome'],
+                        $dadosInscricao['competicao_nome'],
+                        $dadosInscricao['protocolo'],
+                        $dadosInscricao['competicao_local'],
+                        $dadosInscricao['competicao_data'],
+                        $dadosInscricao['equipe_email'],
+                        $dadosInscricao['responsavel_nome']
+                    );
+                } catch (Exception $emailError) {
+                    error_log("Erro ao enviar e-mail de aprovação: " . $emailError->getMessage());
+                }
+            }
+
             redirect('inscricoes.php', 'Inscrição aprovada com sucesso!', 'success');
+
         } elseif ($acao === 'rejeitar') {
+            $motivo = $_POST['motivo'] ?? 'Não especificado';
+
             $stmt = $pdo->prepare("UPDATE inscricoes_competicoes SET status = 'Cancelada' WHERE id = ?");
             $stmt->execute([$inscricaoId]);
+
+            // Enviar e-mail de rejeição
+            if ($dadosInscricao && !empty($dadosInscricao['equipe_email'])) {
+                try {
+                    require_once '../includes/email_helper.php';
+                    emailRejeicaoInscricao(
+                        $dadosInscricao['equipe_nome'],
+                        $dadosInscricao['competicao_nome'],
+                        $dadosInscricao['protocolo'],
+                        $motivo,
+                        $dadosInscricao['equipe_email'],
+                        $dadosInscricao['responsavel_nome']
+                    );
+                } catch (Exception $emailError) {
+                    error_log("Erro ao enviar e-mail de rejeição: " . $emailError->getMessage());
+                }
+            }
+
             redirect('inscricoes.php', 'Inscrição rejeitada com sucesso!', 'success');
         }
     } catch (Exception $e) {
@@ -349,14 +407,10 @@ $pageTitle = 'Gerenciar Inscrições';
                                                     <i class="fas fa-check"></i> Aprovar
                                                 </button>
                                             </form>
-                                            <form method="POST" style="display: inline-block;"
-                                                  onsubmit="return confirm('Confirmar rejeição desta inscrição?');">
-                                                <input type="hidden" name="inscricao_id" value="<?php echo $insc['id']; ?>">
-                                                <input type="hidden" name="acao" value="rejeitar">
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="fas fa-times"></i> Rejeitar
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                    onclick="rejeitarInscricao(<?php echo $insc['id']; ?>, '<?php echo htmlspecialchars($insc['equipe_nome']); ?>', '<?php echo htmlspecialchars($insc['protocolo']); ?>')">
+                                                <i class="fas fa-times"></i> Rejeitar
+                                            </button>
                                         <?php else: ?>
                                             <span class="text-muted">-</span>
                                         <?php endif; ?>
@@ -391,6 +445,45 @@ $pageTitle = 'Gerenciar Inscrições';
         </div>
     </div>
 
+    <!-- Modal - Rejeitar Inscrição -->
+    <div class="modal fade" id="modalRejeitar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST">
+                    <input type="hidden" name="acao" value="rejeitar">
+                    <input type="hidden" name="inscricao_id" id="rejeitar_inscricao_id">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-times-circle"></i> Rejeitar Inscrição
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Atenção:</strong> A equipe será notificada por e-mail sobre a rejeição.
+                        </div>
+                        <p><strong>Equipe:</strong> <span id="rejeitar_equipe_nome"></span></p>
+                        <p><strong>Protocolo:</strong> <span id="rejeitar_protocolo" class="font-monospace"></span></p>
+                        <hr>
+                        <div class="mb-3">
+                            <label class="form-label">Motivo da Rejeição</label>
+                            <textarea name="motivo" class="form-control" rows="4"
+                                      placeholder="Digite o motivo da rejeição (será enviado por e-mail à equipe)" required></textarea>
+                            <small class="text-muted">Este motivo será incluído no e-mail de notificação.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Confirmar Rejeição
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <footer class="bg-light py-3 mt-5">
         <div class="container text-center text-muted">
             <small>&copy; 2025 Sistema de Gestão de Competições Esportivas</small>
@@ -399,6 +492,15 @@ $pageTitle = 'Gerenciar Inscrições';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function rejeitarInscricao(inscricaoId, equipeNome, protocolo) {
+            document.getElementById('rejeitar_inscricao_id').value = inscricaoId;
+            document.getElementById('rejeitar_equipe_nome').textContent = equipeNome;
+            document.getElementById('rejeitar_protocolo').textContent = protocolo;
+
+            const modal = new bootstrap.Modal(document.getElementById('modalRejeitar'));
+            modal.show();
+        }
+
         function verAtletas(inscricaoId) {
             const modal = new bootstrap.Modal(document.getElementById('modalAtletas'));
             const conteudo = document.getElementById('modalAtletasConteudo');
