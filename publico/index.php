@@ -6,6 +6,11 @@ error_reporting(E_ALL);
 try {
     require_once '../config/config.php';
     $pdo = getDBConnection();
+
+    // Verificar se a conexão foi estabelecida
+    if ($pdo === null) {
+        throw new Exception("A conexão com o banco de dados retornou null");
+    }
 } catch (Exception $e) {
     die("Erro ao conectar ao banco de dados: " . $e->getMessage());
 }
