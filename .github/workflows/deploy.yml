@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - claude/fix-null-database-connection-011CUvu7LD2uxL2AftRpfypG
   workflow_dispatch:  # Permite executar manualmente
 
 jobs:
