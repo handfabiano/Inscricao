@@ -20,7 +20,8 @@ function getDBConnection() {
         return $pdo;
     } catch (PDOException $e) {
         error_log("Erro de conexão: " . $e->getMessage());
-        return null;
+        // Re-throw exception para que o código chamador possa lidar com ela
+        throw new Exception("Falha ao conectar ao banco de dados. Verifique as credenciais e se o servidor está ativo.", 0, $e);
     }
 }
 ?>
