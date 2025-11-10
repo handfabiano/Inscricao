@@ -1,0 +1,61 @@
+===========================================
+PROBLEMA: Página de Equipes Não Abre
+===========================================
+
+PASSOS PARA RESOLVER:
+
+1. DIAGNÓSTICO
+   Acesse: http://seu-dominio/diagnostico_equipes.php
+   
+   Este script mostrará:
+   - Estrutura da tabela
+   - Todos os dados inseridos
+   - Problemas encontrados
+   - Qual query está quebrando
+
+2. CORREÇÃO
+   Acesse: http://seu-dominio/corrigir_equipes.php
+   
+   Opções disponíveis:
+   - Deletar equipes com campos NULL
+   - Corrigir organizacao_id
+   - Corrigir status
+   - Corrigir datas
+   - Deletar TODAS as equipes (começar do zero)
+
+3. PROBLEMAS COMUNS:
+
+   a) Campos obrigatórios NULL:
+      - nome, email, senha não podem ser NULL
+      Solução: Deletar ou preencher
+
+   b) organizacao_id inválido:
+      - Referência para organização inexistente
+      Solução: Corrigir para uma organização válida
+
+   c) Status inválido:
+      - Deve ser: Pendente, Aprovada ou Rejeitada
+      Solução: Definir como 'Pendente'
+
+4. EXEMPLO DE INSERT CORRETO:
+
+INSERT INTO equipes (
+    nome, email, telefone, senha, 
+    responsavel_nome, responsavel_cpf,
+    cidade, estado, status, organizacao_id,
+    created_at
+) VALUES (
+    'Equipe Teste',
+    'teste@email.com',
+    '11999999999',
+    '$2y$10$...', -- usar password_hash()
+    'João Silva',
+    '12345678901',
+    'São Paulo',
+    'SP',
+    'Pendente',
+    1, -- ID de uma organização existente
+    NOW()
+);
+
+===========================================
