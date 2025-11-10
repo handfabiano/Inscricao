@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("
             UPDATE competicoes SET
                 nome = ?, descricao = ?, banner_path = ?,
-                data_inicio_inscricao = ?, data_fim_inscricao = ?,
+                data_inicio_inscricoes = ?, data_fim_inscricoes = ?,
                 data_inicio_evento = ?, data_fim_evento = ?,
                 modalidade_id = ?, categorias_permitidas = ?, genero_permitido = ?,
                 min_atletas = ?, max_atletas = ?, taxa_inscricao = ?,
@@ -50,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             sanitize($_POST['nome']),
             sanitize($_POST['descricao'] ?? ''),
             $bannerFileName,
-            $_POST['data_inicio_inscricao'],
-            $_POST['data_fim_inscricao'],
+            $_POST['data_inicio_inscricoes'],
+            $_POST['data_fim_inscricoes'],
             $_POST['data_inicio_evento'],
             $_POST['data_fim_evento'],
             (int)$_POST['modalidade_id'],
@@ -142,12 +142,12 @@ $categoriasComp = json_decode($comp['categorias_permitidas'], true) ?? [];
                 
                 <div class="col-md-3">
                     <label class="form-label">Início Inscrições *</label>
-                    <input type="date" class="form-control" name="data_inicio_inscricao" value="<?php echo $comp['data_inicio_inscricao']; ?>" required>
+                    <input type="date" class="form-control" name="data_inicio_inscricoes" value="<?php echo $comp['data_inicio_inscricoes']; ?>" required>
                 </div>
                 
                 <div class="col-md-3">
                     <label class="form-label">Fim Inscrições *</label>
-                    <input type="date" class="form-control" name="data_fim_inscricao" value="<?php echo $comp['data_fim_inscricao']; ?>" required>
+                    <input type="date" class="form-control" name="data_fim_inscricoes" value="<?php echo $comp['data_fim_inscricoes']; ?>" required>
                 </div>
                 
                 <div class="col-md-3">

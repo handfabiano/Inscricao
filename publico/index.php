@@ -20,7 +20,7 @@ try {
     $stmt = $pdo->query("
         SELECT * FROM competicoes
         WHERE status = 'Aberta'
-        ORDER BY data_inicio_inscricao DESC
+        ORDER BY data_inicio_inscricoes DESC
         LIMIT 6
     ");
     $competicoesAbertas = $stmt->fetchAll();
@@ -266,7 +266,7 @@ try {
                                 <p class="mb-0 text-success">
                                     <i class="fas fa-clock"></i>
                                     <strong>Inscrições até:</strong>
-                                    <?php echo date('d/m/Y', strtotime($comp['data_fim_inscricao'])); ?>
+                                    <?php echo date('d/m/Y', strtotime($comp['data_fim_inscricoes'])); ?>
                                 </p>
                             </div>
                         </div>
