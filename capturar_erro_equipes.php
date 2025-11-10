@@ -12,7 +12,7 @@ ob_start();
 
 try {
     echo "<p>1. Carregando config...</p>";
-    require_once '../config/config.php';
+    require_once __DIR__ . '/config/config.php';
 
     echo "<p>2. Testando requireAdminLogin...</p>";
     // Comentar temporariamente para ver se é isso que está quebrando
