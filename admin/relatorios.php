@@ -37,9 +37,9 @@ function getRelatorioGeral($pdo, $dataInicio, $dataFim) {
     $stmt = $pdo->prepare("
         SELECT COUNT(*) as total,
                SUM(CASE WHEN status = 'Aberta' THEN 1 ELSE 0 END) as abertas,
-               SUM(CASE WHEN status = 'Encerrada' THEN 1 ELSE 0 END) as encerradas
+               SUM(CASE WHEN status = 'Finalizada' THEN 1 ELSE 0 END) as finalizadas
         FROM competicoes
-        WHERE DATE(data_inicio_inscricoes) BETWEEN ? AND ?
+        WHERE DATE(data_inicio_inscricao) BETWEEN ? AND ?
     ");
     $stmt->execute([$dataInicio, $dataFim]);
     $stats['competicoes'] = $stmt->fetch();
@@ -72,15 +72,16 @@ function getRelatorioGeral($pdo, $dataInicio, $dataFim) {
 // Relatório de inscrições por competição
 function getInscricoesPorCompeticao($pdo, $dataInicio, $dataFim) {
     $stmt = $pdo->prepare("
-        SELECT c.nome, c.modalidade,
+        SELECT c.nome, m.nome as modalidade,
                COUNT(i.id) as total_inscricoes,
                SUM(CASE WHEN i.status = 'Confirmada' THEN 1 ELSE 0 END) as confirmadas,
                SUM(CASE WHEN i.status = 'Pendente' THEN 1 ELSE 0 END) as pendentes,
                c.data_inicio_evento, c.data_fim_evento
         FROM competicoes c
+        LEFT JOIN modalidades m ON c.modalidade_id = m.id
         LEFT JOIN inscricoes_competicoes i ON c.id = i.competicao_id
             AND DATE(i.created_at) BETWEEN ? AND ?
-        WHERE DATE(c.data_inicio_inscricoes) BETWEEN ? AND ?
+        WHERE DATE(c.data_inicio_inscricao) BETWEEN ? AND ?
         GROUP BY c.id
         ORDER BY total_inscricoes DESC
     ");
