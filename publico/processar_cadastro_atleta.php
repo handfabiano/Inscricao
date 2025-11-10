@@ -136,7 +136,7 @@ try {
     // Marcar convite como aceito
     $stmt = $pdo->prepare("
         UPDATE convites_atletas
-        SET status = 'Aceito', usado_em = NOW()
+        SET status = 'Aceito', data_aceite = NOW()
         WHERE id = ?
     ");
     $stmt->execute([$convite['id']]);
