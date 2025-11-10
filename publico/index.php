@@ -37,11 +37,11 @@ if ($db_connected) {
         $table_exists = $stmt->rowCount() > 0;
 
         if ($table_exists) {
-            // Buscar competições abertas
+            // Buscar competições abertas (usando nome CORRETO: PLURAL)
             $stmt = $pdo->query("
                 SELECT * FROM competicoes
                 WHERE status = 'Aberta'
-                ORDER BY data_inicio_inscricao DESC
+                ORDER BY data_inicio_inscricoes DESC
                 LIMIT 6
             ");
             $competicoesAbertas = $stmt->fetchAll();
@@ -127,10 +127,13 @@ if ($db_connected) {
             font-size: 28px;
             margin: 0 auto 20px;
         }
-        .competicao-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
+        .competicao-card {
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .competicao-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         .alert-setup {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -280,6 +283,110 @@ if ($db_connected) {
             </div>
         </div>
     </section>
+
+    <!-- Competições Abertas -->
+    <?php if (!empty($competicoesAbertas)): ?>
+    <section class="py-5">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h2 class="fw-bold">
+                        <i class="fas fa-door-open text-success"></i>
+                        Inscrições Abertas
+                    </h2>
+                    <p class="text-muted">Confira as competições com inscrições abertas no momento</p>
+                </div>
+            </div>
+            <div class="row g-4">
+                <?php foreach ($competicoesAbertas as $comp): ?>
+                <div class="col-md-4">
+                    <div class="card competicao-card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge bg-success">Aberta</span>
+                                <span class="badge bg-info"><?php echo htmlspecialchars($comp['modalidade'] ?? 'N/A'); ?></span>
+                            </div>
+                            <h5 class="card-title"><?php echo htmlspecialchars($comp['nome']); ?></h5>
+                            <p class="card-text text-muted small">
+                                <?php echo htmlspecialchars(substr($comp['descricao'] ?? '', 0, 100)); ?><?php echo strlen($comp['descricao'] ?? '') > 100 ? '...' : ''; ?>
+                            </p>
+                            <hr>
+                            <div class="small">
+                                <p class="mb-2">
+                                    <i class="fas fa-calendar text-primary"></i>
+                                    <strong>Evento:</strong>
+                                    <?php echo date('d/m/Y', strtotime($comp['data_inicio_evento'])); ?>
+                                </p>
+                                <p class="mb-2">
+                                    <i class="fas fa-map-marker-alt text-danger"></i>
+                                    <strong>Local:</strong> <?php echo htmlspecialchars($comp['local_evento'] ?? 'A definir'); ?>
+                                </p>
+                                <p class="mb-0 text-success">
+                                    <i class="fas fa-clock"></i>
+                                    <strong>Inscrições até:</strong>
+                                    <?php echo date('d/m/Y', strtotime($comp['data_fim_inscricoes'])); ?>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="../equipe/login.php" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-sign-in-alt"></i> Fazer Login para Inscrever
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <!-- Próximas Competições -->
+    <?php if (!empty($proximasCompeticoes)): ?>
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h2 class="fw-bold">
+                        <i class="fas fa-calendar-alt text-primary"></i>
+                        Próximas Competições
+                    </h2>
+                    <p class="text-muted">Eventos que acontecerão em breve</p>
+                </div>
+            </div>
+            <div class="row g-4">
+                <?php foreach (array_slice($proximasCompeticoes, 0, 3) as $comp): ?>
+                <div class="col-md-4">
+                    <div class="card competicao-card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge bg-primary">Em Breve</span>
+                                <span class="badge bg-info"><?php echo htmlspecialchars($comp['modalidade'] ?? 'N/A'); ?></span>
+                            </div>
+                            <h5 class="card-title"><?php echo htmlspecialchars($comp['nome']); ?></h5>
+                            <p class="card-text text-muted small">
+                                <?php echo htmlspecialchars(substr($comp['descricao'] ?? '', 0, 100)); ?><?php echo strlen($comp['descricao'] ?? '') > 100 ? '...' : ''; ?>
+                            </p>
+                            <hr>
+                            <div class="small">
+                                <p class="mb-2">
+                                    <i class="fas fa-calendar text-primary"></i>
+                                    <strong>Data:</strong>
+                                    <?php echo date('d/m/Y', strtotime($comp['data_inicio_evento'])); ?>
+                                </p>
+                                <p class="mb-0">
+                                    <i class="fas fa-map-marker-alt text-danger"></i>
+                                    <strong>Local:</strong> <?php echo htmlspecialchars($comp['local_evento'] ?? 'A definir'); ?>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <!-- Funcionalidades Enterprise -->
     <section class="py-5">
