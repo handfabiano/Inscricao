@@ -6,7 +6,7 @@ PASSOS PARA RESOLVER:
 
 1. DIAGNÓSTICO
    Acesse: http://seu-dominio/diagnostico_equipes.php
-   
+
    Este script mostrará:
    - Estrutura da tabela
    - Todos os dados inseridos
@@ -15,7 +15,7 @@ PASSOS PARA RESOLVER:
 
 2. CORREÇÃO
    Acesse: http://seu-dominio/corrigir_equipes.php
-   
+
    Opções disponíveis:
    - Deletar equipes com campos NULL
    - Corrigir organizacao_id
@@ -26,7 +26,7 @@ PASSOS PARA RESOLVER:
 3. PROBLEMAS COMUNS:
 
    a) Campos obrigatórios NULL:
-      - nome, email, senha não podem ser NULL
+      - nome, responsavel_nome, responsavel_cpf não podem ser NULL
       Solução: Deletar ou preencher
 
    b) organizacao_id inválido:
@@ -40,22 +40,40 @@ PASSOS PARA RESOLVER:
 4. EXEMPLO DE INSERT CORRETO:
 
 INSERT INTO equipes (
-    nome, email, telefone, senha, 
-    responsavel_nome, responsavel_cpf,
+    nome, responsavel_nome, responsavel_cpf,
+    responsavel_email, responsavel_telefone,
     cidade, estado, status, organizacao_id,
     created_at
 ) VALUES (
     'Equipe Teste',
-    'teste@email.com',
-    '11999999999',
-    '$2y$10$...', -- usar password_hash()
     'João Silva',
     '12345678901',
+    'joao@equipeteste.com',
+    '11999999999',
     'São Paulo',
     'SP',
     'Pendente',
     1, -- ID de uma organização existente
     NOW()
 );
+
+5. ESTRUTURA CORRETA DA TABELA:
+
+   Campos obrigatórios (NOT NULL):
+   - organizacao_id (INT) - deve existir em organizacoes
+   - nome (VARCHAR 200)
+   - responsavel_nome (VARCHAR 200)
+   - responsavel_cpf (VARCHAR 14) - ÚNICO
+   - responsavel_email (VARCHAR 200)
+   - responsavel_telefone (VARCHAR 20)
+   - cidade (VARCHAR 100)
+   - estado (VARCHAR 2)
+
+   Campos opcionais:
+   - sigla, ano_fundacao, cores, escudo_path
+   - usuario, senha (para login)
+   - status (padrão: Pendente)
+   - ativo (padrão: 1)
+   - documentos, endereço completo, etc.
 
 ===========================================

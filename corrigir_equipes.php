@@ -21,7 +21,7 @@ try {
         }
 
         if ($acao === 'deletar_nulls') {
-            $stmt = $pdo->query("DELETE FROM equipes WHERE nome IS NULL OR email IS NULL OR senha IS NULL");
+            $stmt = $pdo->query("DELETE FROM equipes WHERE nome IS NULL OR responsavel_nome IS NULL OR responsavel_cpf IS NULL");
             $deleted = $stmt->rowCount();
             echo "<div style='background: #d4edda; padding: 15px; border: 1px solid #c3e6cb; border-radius: 5px; margin: 10px 0;'>";
             echo "<strong>✅ {$deleted} registro(s) com campos NULL deletado(s)!</strong>";
@@ -73,7 +73,7 @@ try {
     $stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes");
     $total = $stmt->fetch()['total'];
 
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes WHERE nome IS NULL OR email IS NULL OR senha IS NULL");
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes WHERE nome IS NULL OR responsavel_nome IS NULL OR responsavel_cpf IS NULL");
     $nulls = $stmt->fetch()['total'];
 
     $stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes WHERE organizacao_id IS NULL");
