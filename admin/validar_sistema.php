@@ -1,248 +1,443 @@
 <?php
 /**
- * Validação Completa do Sistema
+ * Validação Completa do Sistema - Web Version
  *
  * Testa: configurações, relatórios, convites e estrutura do banco
  *
- * @version 2.0
+ * @version 2.1
  * @date 2025-11-10
  */
 
+// Iniciar output buffering para evitar problemas com headers
+ob_start();
+
 require_once __DIR__ . '/../config/database.php';
-
-// Funções auxiliares
-function showResult($test, $success, $message = '') {
-    $icon = $success ? '✅' : '❌';
-    echo "$icon $test" . ($message ? ": $message" : '') . "\n";
-    return $success;
-}
-
-function showInfo($message) {
-    echo "ℹ️ $message\n";
-}
-
-function showSection($title) {
-    echo "\n" . str_repeat("=", 50) . "\n";
-    echo "$title\n";
-    echo str_repeat("=", 50) . "\n";
-}
-
-try {
-    $pdo = getDBConnection();
-
-    echo "\n";
-    showSection("🔍 VALIDAÇÃO COMPLETA DO SISTEMA");
-    echo "Data: " . date('Y-m-d H:i:s') . "\n";
-
-    // 1. Teste de Configurações
-    showSection("1️⃣ Teste: admin/configuracoes.php");
-
-    // Verificar tabela administradores
-    $stmt = $pdo->query("SHOW TABLES LIKE 'administradores'");
-    showResult(
-        "Tabela administradores",
-        $stmt->rowCount() > 0
-    );
-
-    if ($stmt->rowCount() > 0) {
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM administradores");
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        showInfo("Total de admins: " . $result['total']);
-    }
-
-    // Verificar arquivo
-    $file_exists = file_exists(__DIR__ . '/configuracoes.php');
-    showResult("Arquivo configuracoes.php", $file_exists);
-
-    // 2. Teste de Relatórios
-    showSection("2️⃣ Teste: admin/relatorios.php");
-
-    $file_exists = file_exists(__DIR__ . '/relatorios.php');
-    showResult("Arquivo relatorios.php", $file_exists);
-
-    // Verificar tabelas essenciais
-    $essential_tables = [
-        'equipes',
-        'competicoes',
-        'atletas',
-        'inscricoes_competicoes'
-    ];
-
-    foreach ($essential_tables as $table) {
-        $stmt = $pdo->query("SHOW TABLES LIKE '$table'");
-        showResult("Tabela $table", $stmt->rowCount() > 0);
-    }
-
-    // 3. Teste de Convites de Atletas
-    showSection("3️⃣ Teste: Convites de Atletas");
-
-    // Verificar tabela
-    $stmt = $pdo->query("SHOW TABLES LIKE 'convites_atletas'");
-    $table_exists = $stmt->rowCount() > 0;
-    showResult("Tabela convites_atletas", $table_exists);
-
-    if ($table_exists) {
-        // Verificar colunas NOVAS (padrão correto)
-        $columns_to_check = [
-            'data_expiracao' => 'DATETIME NOT NULL',
-            'data_aceite' => 'DATETIME NULL',
-            'data_criacao' => 'TIMESTAMP',
-            'telefone_atleta' => 'VARCHAR(20)',
-            'token' => 'VARCHAR(64)',
-            'equipe_id' => 'INT'
-        ];
-
-        // Verificar colunas ANTIGAS (que não deveriam existir)
-        $old_columns = [
-            'validade_ate' => 'DATETIME NOT NULL (antigo)',
-            'usado_em' => 'DATETIME NULL (antigo)'
-        ];
-
-        echo "\n📋 Estrutura da Tabela:\n";
-
-        $stmt = $pdo->query("DESCRIBE convites_atletas");
-        $existing_columns = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $existing_columns[$row['Field']] = $row;
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validação do Sistema</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        // Verificar colunas novas (corretas)
-        foreach ($columns_to_check as $column => $expected_type) {
-            if (isset($existing_columns[$column])) {
-                showResult("Coluna $column", true, "existe");
-            } else {
-                showResult("Coluna $column", false, "NÃO existe");
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section h2::before {
+            content: attr(data-icon);
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .test-item {
+            padding: 10px 15px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid transparent;
+        }
+
+        .test-item.success {
+            border-left-color: #28a745;
+        }
+
+        .test-item.error {
+            border-left-color: #dc3545;
+        }
+
+        .test-item.info {
+            border-left-color: #17a2b8;
+        }
+
+        .test-label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .test-status {
+            font-size: 20px;
+        }
+
+        .test-message {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .status-box {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .status-box.alert {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+        }
+
+        .status-box.success {
+            background: #d4edda;
+            border: 1px solid #28a745;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .links-uteis {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .links-uteis h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .links-uteis ul {
+            list-style: none;
+        }
+
+        .links-uteis li {
+            padding: 8px 0;
+        }
+
+        .links-uteis a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .links-uteis a:hover {
+            text-decoration: underline;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Validação Completa do Sistema</h1>
+            <p>Verificação de estrutura, tabelas e configurações</p>
+        </div>
+
+        <div class="content">
+            <?php
+            try {
+                $pdo = getDBConnection();
+
+                // ========================================
+                // 1. TESTE DE CONFIGURAÇÕES
+                // ========================================
+                echo '<div class="section">';
+                echo '<h2 data-icon="1️⃣">Configurações do Sistema</h2>';
+
+                // Verificar tabela administradores
+                $stmt = $pdo->query("SHOW TABLES LIKE 'administradores'");
+                $admin_exists = $stmt->rowCount() > 0;
+
+                echo '<div class="test-item ' . ($admin_exists ? 'success' : 'error') . '">';
+                echo '<div>';
+                echo '<div class="test-label">Tabela administradores</div>';
+                if ($admin_exists) {
+                    $stmt = $pdo->query("SELECT COUNT(*) as total FROM administradores");
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                    echo '<div class="test-message">Total de admins cadastrados: ' . $result['total'] . '</div>';
+                }
+                echo '</div>';
+                echo '<div class="test-status">' . ($admin_exists ? '✅' : '❌') . '</div>';
+                echo '</div>';
+
+                // Verificar arquivo configuracoes.php
+                $file_exists = file_exists(__DIR__ . '/configuracoes.php');
+                echo '<div class="test-item ' . ($file_exists ? 'success' : 'error') . '">';
+                echo '<div class="test-label">Arquivo configuracoes.php</div>';
+                echo '<div class="test-status">' . ($file_exists ? '✅' : '❌') . '</div>';
+                echo '</div>';
+
+                echo '</div>';
+
+                // ========================================
+                // 2. TESTE DE RELATÓRIOS
+                // ========================================
+                echo '<div class="section">';
+                echo '<h2 data-icon="2️⃣">Sistema de Relatórios</h2>';
+
+                $file_exists = file_exists(__DIR__ . '/relatorios.php');
+                echo '<div class="test-item ' . ($file_exists ? 'success' : 'error') . '">';
+                echo '<div class="test-label">Arquivo relatorios.php</div>';
+                echo '<div class="test-status">' . ($file_exists ? '✅' : '❌') . '</div>';
+                echo '</div>';
+
+                // Verificar tabelas essenciais
+                $essential_tables = [
+                    'equipes' => 'Gerenciamento de equipes',
+                    'competicoes' => 'Gerenciamento de competições',
+                    'atletas' => 'Cadastro de atletas',
+                    'inscricoes_competicoes' => 'Inscrições em competições'
+                ];
+
+                foreach ($essential_tables as $table => $description) {
+                    $stmt = $pdo->query("SHOW TABLES LIKE '$table'");
+                    $exists = $stmt->rowCount() > 0;
+
+                    echo '<div class="test-item ' . ($exists ? 'success' : 'error') . '">';
+                    echo '<div>';
+                    echo '<div class="test-label">Tabela ' . $table . '</div>';
+                    echo '<div class="test-message">' . $description . '</div>';
+                    echo '</div>';
+                    echo '<div class="test-status">' . ($exists ? '✅' : '❌') . '</div>';
+                    echo '</div>';
+                }
+
+                echo '</div>';
+
+                // ========================================
+                // 3. TESTE DE CONVITES DE ATLETAS
+                // ========================================
+                echo '<div class="section">';
+                echo '<h2 data-icon="3️⃣">Sistema de Convites de Atletas</h2>';
+
+                // Verificar tabela
+                $stmt = $pdo->query("SHOW TABLES LIKE 'convites_atletas'");
+                $table_exists = $stmt->rowCount() > 0;
+
+                echo '<div class="test-item ' . ($table_exists ? 'success' : 'error') . '">';
+                echo '<div class="test-label">Tabela convites_atletas</div>';
+                echo '<div class="test-status">' . ($table_exists ? '✅' : '❌') . '</div>';
+                echo '</div>';
+
+                if ($table_exists) {
+                    // Verificar estrutura das colunas
+                    $stmt = $pdo->query("DESCRIBE convites_atletas");
+                    $existing_columns = [];
+                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                        $existing_columns[$row['Field']] = $row;
+                    }
+
+                    // Verificar colunas CORRETAS (novas)
+                    $correct_columns = [
+                        'data_expiracao' => 'Data de expiração do convite',
+                        'data_aceite' => 'Data em que o convite foi aceito',
+                        'token' => 'Token único do convite',
+                        'equipe_id' => 'ID da equipe que criou o convite'
+                    ];
+
+                    $all_correct = true;
+                    foreach ($correct_columns as $column => $description) {
+                        $exists = isset($existing_columns[$column]);
+                        if (!$exists) $all_correct = false;
+
+                        echo '<div class="test-item ' . ($exists ? 'success' : 'error') . '">';
+                        echo '<div>';
+                        echo '<div class="test-label">Coluna ' . $column . '</div>';
+                        echo '<div class="test-message">' . $description . '</div>';
+                        echo '</div>';
+                        echo '<div class="test-status">' . ($exists ? '✅' : '❌') . '</div>';
+                        echo '</div>';
+                    }
+
+                    // Verificar colunas ANTIGAS (devem NÃO existir)
+                    $old_columns = [
+                        'validade_ate' => 'Coluna antiga (deve ser data_expiracao)',
+                        'usado_em' => 'Coluna antiga (deve ser data_aceite)'
+                    ];
+
+                    $has_old = false;
+                    foreach ($old_columns as $column => $description) {
+                        $exists = isset($existing_columns[$column]);
+                        if ($exists) {
+                            $has_old = true;
+                            $all_correct = false;
+                        }
+
+                        echo '<div class="test-item ' . (!$exists ? 'success' : 'error') . '">';
+                        echo '<div>';
+                        echo '<div class="test-label">Coluna ' . $column . ' (antiga)</div>';
+                        echo '<div class="test-message">' . ($exists ? 'Ainda existe - precisa migration' : 'Não existe - correto!') . '</div>';
+                        echo '</div>';
+                        echo '<div class="test-status">' . (!$exists ? '✅' : '❌') . '</div>';
+                        echo '</div>';
+                    }
+
+                    // Total de convites
+                    $stmt = $pdo->query("SELECT COUNT(*) as total FROM convites_atletas");
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    echo '<div class="test-item info">';
+                    echo '<div class="test-label">Total de convites no banco</div>';
+                    echo '<div class="test-status">' . $result['total'] . '</div>';
+                    echo '</div>';
+
+                    // Status geral da estrutura
+                    if ($has_old) {
+                        echo '<div class="status-box alert">';
+                        echo '<h3>⚠️ Migration Necessária</h3>';
+                        echo '<p>A tabela possui colunas antigas que precisam ser renomeadas.</p>';
+                        echo '<p><strong>Ação necessária:</strong> Execute a migration em <a href="fix_convites_columns.php">fix_convites_columns.php</a></p>';
+                        echo '</div>';
+                    } else if ($all_correct) {
+                        echo '<div class="status-box success">';
+                        echo '<h3>✅ Estrutura Correta!</h3>';
+                        echo '<p>Todas as colunas estão com os nomes corretos. Sistema pronto para uso!</p>';
+                        echo '</div>';
+                    }
+                }
+
+                echo '</div>';
+
+                // ========================================
+                // 4. RESUMO DE TABELAS
+                // ========================================
+                echo '<div class="section">';
+                echo '<h2 data-icon="4️⃣">Resumo do Banco de Dados</h2>';
+
+                $stmt = $pdo->query("SHOW TABLES");
+                $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+                echo '<div class="test-item info">';
+                echo '<div class="test-label">Total de tabelas no banco</div>';
+                echo '<div class="test-status">' . count($tables) . '</div>';
+                echo '</div>';
+
+                // Verificar tabelas por categoria
+                $categories = [
+                    'Sistema' => ['administradores', 'usuarios', 'logs', 'migrations'],
+                    'Competições' => ['competicoes', 'modalidades', 'categorias', 'inscricoes_competicoes'],
+                    'Equipes/Atletas' => ['equipes', 'atletas', 'inscricoes_atletas', 'convites_atletas'],
+                    'Organizações' => ['organizacoes', 'planos_assinatura', 'historico_assinaturas']
+                ];
+
+                foreach ($categories as $category => $category_tables) {
+                    $found = array_intersect($category_tables, $tables);
+                    if (count($found) > 0) {
+                        echo '<div class="status-box">';
+                        echo '<strong>' . $category . ':</strong> ';
+                        echo implode(', ', $found);
+                        echo '</div>';
+                    }
+                }
+
+                echo '</div>';
+
+                // ========================================
+                // 5. LINKS ÚTEIS
+                // ========================================
+                echo '<div class="links-uteis">';
+                echo '<h3>🔗 Links Úteis</h3>';
+                echo '<ul>';
+                echo '<li>🏠 <a href="index.php">Dashboard Admin</a></li>';
+                echo '<li>⚙️ <a href="configuracoes.php">Configurações</a></li>';
+                echo '<li>📊 <a href="relatorios.php">Relatórios</a></li>';
+                echo '<li>✉️ <a href="convites_atletas.php">Convites de Atletas</a></li>';
+
+                // Link para fix apenas se necessário
+                if (isset($has_old) && $has_old) {
+                    echo '<li>🔧 <a href="fix_convites_columns.php" style="color: #dc3545; font-weight: bold;">Corrigir Colunas (NECESSÁRIO)</a></li>';
+                }
+
+                echo '</ul>';
+                echo '</div>';
+
+            } catch (PDOException $e) {
+                echo '<div class="section">';
+                echo '<div class="status-box alert">';
+                echo '<h3>❌ Erro de Conexão com o Banco</h3>';
+                echo '<p>' . htmlspecialchars($e->getMessage()) . '</p>';
+                echo '</div>';
+                echo '</div>';
             }
-        }
+            ?>
 
-        // Verificar colunas antigas (devem NÃO existir)
-        echo "\n🔍 Verificando Colunas Antigas (devem estar ausentes):\n";
-        foreach ($old_columns as $column => $description) {
-            if (isset($existing_columns[$column])) {
-                showResult("Coluna $column", false, "ainda existe (precisa migração)");
-            } else {
-                showResult("Coluna $column", true, "não existe (correto!)");
-            }
-        }
-
-        // Verificar status do ENUM
-        if (isset($existing_columns['status'])) {
-            $type = $existing_columns['status']['Type'];
-            $has_recusado = strpos($type, 'Recusado') !== false;
-            echo "\n";
-            showResult(
-                "Status ENUM completo",
-                $has_recusado,
-                $has_recusado ? "inclui 'Recusado'" : "falta 'Recusado'"
-            );
-        }
-
-        // Total de convites
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM convites_atletas");
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        echo "\n";
-        showInfo("Total de convites: " . $result['total']);
-
-        // Exemplo de link (se houver convites)
-        if ($result['total'] > 0) {
-            $stmt = $pdo->query("SELECT token FROM convites_atletas LIMIT 1");
-            $convite = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($convite) {
-                $base_url = "https://mediumblue-rhinoceros-869852.hostingersite.com";
-                $link = $base_url . "/publico/cadastro_atleta.php?token=" . $convite['token'];
-                showInfo("Exemplo de link de convite:");
-                echo "   $link\n";
-            }
-        }
-
-        // Verificar arquivos
-        echo "\n";
-        $file_exists = file_exists(__DIR__ . '/convites_atletas.php');
-        showResult("Arquivo convites_atletas.php", $file_exists);
-
-        $file_exists = file_exists(__DIR__ . '/../publico/cadastro_atleta.php');
-        showResult("Arquivo cadastro_atleta.php", $file_exists);
-    }
-
-    // 4. Resumo de Tabelas
-    showSection("4️⃣ Resumo: Tabelas no Banco");
-
-    $stmt = $pdo->query("SHOW TABLES");
-    $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-    showInfo("Total de tabelas: " . count($tables));
-    echo "\n";
-
-    // Agrupar por categoria
-    $categories = [
-        'Sistema' => ['administradores', 'usuarios', 'logs', 'migrations'],
-        'Competições' => ['competicoes', 'modalidades', 'categorias', 'inscricoes_competicoes'],
-        'Equipes/Atletas' => ['equipes', 'atletas', 'inscricoes_atletas', 'convites_atletas'],
-        'Organizações' => ['organizacoes', 'planos_assinatura', 'historico_assinaturas'],
-        'Pagamentos' => ['payment_transactions', 'payment_gateways', 'payment_refunds'],
-        'Analytics' => ['athlete_statistics', 'team_rankings', 'performance_insights'],
-        'Integrações' => ['webhooks', 'integration_configs', 'api_tokens']
-    ];
-
-    foreach ($categories as $category => $category_tables) {
-        $found = array_intersect($category_tables, $tables);
-        if (count($found) > 0) {
-            echo "📁 $category:\n";
-            foreach ($found as $table) {
-                echo "   - $table\n";
-            }
-            echo "\n";
-        }
-    }
-
-    // 5. Diagnóstico e Próximos Passos
-    showSection("5️⃣ Diagnóstico e Próximos Passos");
-
-    // Verificar se precisa de migration
-    $needs_migration = isset($existing_columns['validade_ate']) || isset($existing_columns['usado_em']);
-
-    if ($needs_migration) {
-        echo "⚠️ AÇÃO NECESSÁRIA: Migration de Colunas\n\n";
-        echo "A tabela convites_atletas possui colunas antigas que precisam ser\n";
-        echo "renomeadas para o padrão correto:\n\n";
-        echo "   validade_ate  →  data_expiracao\n";
-        echo "   usado_em      →  data_aceite\n\n";
-        echo "🔧 Para corrigir, execute:\n";
-        echo "   1. Acesse: admin/fix_convites_columns.php\n";
-        echo "   2. Clique em 'Executar Migration Agora'\n";
-        echo "   3. Aguarde a conclusão\n";
-        echo "   4. Execute este script novamente para validar\n\n";
-    } else {
-        echo "✅ SISTEMA OK: Estrutura Validada\n\n";
-        echo "Próximos passos:\n";
-        echo "   1. ✅ Estrutura do banco: OK\n";
-        echo "   2. ✅ Tabelas essenciais: OK\n";
-        echo "   3. ✅ Colunas corretas: OK\n";
-        echo "   4. 📝 Fazer login como administrador\n";
-        echo "   5. 📝 Testar configurações\n";
-        echo "   6. 📝 Testar relatórios\n";
-        echo "   7. 📝 Testar convites (logado como equipe)\n\n";
-    }
-
-    // Links úteis
-    echo "🔗 Links Úteis:\n";
-    echo "   - Admin: /admin/index.php\n";
-    echo "   - Login Equipe: /equipe/login.php\n";
-    echo "   - Configurações: /admin/configuracoes.php\n";
-    echo "   - Relatórios: /admin/relatorios.php\n";
-    echo "   - Convites: /admin/convites_atletas.php\n";
-
-    if ($needs_migration) {
-        echo "   - Fix Colunas: /admin/fix_convites_columns.php ⚠️\n";
-    }
-
-    echo "\n";
-    showSection("✅ Validação Concluída");
-    echo "\n";
-
-} catch (PDOException $e) {
-    echo "\n❌ ERRO DE CONEXÃO:\n";
-    echo $e->getMessage() . "\n\n";
-    exit(1);
-}
+            <div class="timestamp">
+                Validação executada em: <?php echo date('d/m/Y H:i:s'); ?>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
