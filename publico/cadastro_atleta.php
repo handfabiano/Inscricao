@@ -30,8 +30,13 @@ if (!$mensagemErro) {
             $mensagemErro = "Convite não encontrado ou inválido.";
         } elseif ($convite['status'] === 'Aceito') {
             $mensagemErro = "Este convite já foi utilizado.";
-        } elseif ($convite['status'] === 'Expirado' || strtotime($convite['data_expiracao']) < time()) {
-            $mensagemErro = "Este convite expirou. Solicite um novo convite à sua equipe.";
+        } else {
+            // Compatibilidade com nomes antigos e novos de colunas
+            $data_expiracao = isset($convite['data_expiracao']) ? $convite['data_expiracao'] : $convite['validade_ate'];
+
+            if ($convite['status'] === 'Expirado' || strtotime($data_expiracao) < time()) {
+                $mensagemErro = "Este convite expirou. Solicite um novo convite à sua equipe.";
+            }
         }
 
     } catch (Exception $e) {

@@ -24,7 +24,10 @@ try {
         throw new Exception("Convite inválido ou já utilizado.");
     }
 
-    if (strtotime($convite['validade_ate']) < time()) {
+    // Compatibilidade com nomes antigos e novos de colunas
+    $data_expiracao = isset($convite['data_expiracao']) ? $convite['data_expiracao'] : $convite['validade_ate'];
+
+    if (strtotime($data_expiracao) < time()) {
         throw new Exception("Convite expirado.");
     }
 
@@ -134,12 +137,23 @@ try {
     }
 
     // Marcar convite como aceito
-    $stmt = $pdo->prepare("
-        UPDATE convites_atletas
-        SET status = 'Aceito', data_aceite = NOW()
-        WHERE id = ?
-    ");
-    $stmt->execute([$convite['id']]);
+    // Tenta usar o nome novo da coluna, se falhar, usa o antigo
+    try {
+        $stmt = $pdo->prepare("
+            UPDATE convites_atletas
+            SET status = 'Aceito', data_aceite = NOW()
+            WHERE id = ?
+        ");
+        $stmt->execute([$convite['id']]);
+    } catch (PDOException $e) {
+        // Se falhar, pode ser que ainda use o nome antigo
+        $stmt = $pdo->prepare("
+            UPDATE convites_atletas
+            SET status = 'Aceito', usado_em = NOW()
+            WHERE id = ?
+        ");
+        $stmt->execute([$convite['id']]);
+    }
 
     // Confirmar transação
     $pdo->commit();

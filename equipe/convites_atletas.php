@@ -22,11 +22,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $validadeAte = date('Y-m-d H:i:s', strtotime("+$diasValidade days"));
 
-            $stmt = $pdo->prepare("
-                INSERT INTO convites_atletas (equipe_id, token, email_atleta, nome_atleta, data_expiracao)
-                VALUES (?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([$equipeId, $token, $emailAtleta, $nomeAtleta, $validadeAte]);
+            // Tenta usar o nome novo da coluna, se falhar, usa o antigo
+            try {
+                $stmt = $pdo->prepare("
+                    INSERT INTO convites_atletas (equipe_id, token, email_atleta, nome_atleta, data_expiracao)
+                    VALUES (?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([$equipeId, $token, $emailAtleta, $nomeAtleta, $validadeAte]);
+            } catch (PDOException $e) {
+                // Se falhar, pode ser que ainda use o nome antigo
+                $stmt = $pdo->prepare("
+                    INSERT INTO convites_atletas (equipe_id, token, email_atleta, nome_atleta, validade_ate)
+                    VALUES (?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([$equipeId, $token, $emailAtleta, $nomeAtleta, $validadeAte]);
+            }
 
             $mensagem = "Convite gerado com sucesso! Copie o link abaixo e envie para o atleta.";
             $tipoMensagem = "success";
@@ -60,6 +70,18 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$equipeId]);
 $convites = $stmt->fetchAll();
+
+// Normalizar nomes de colunas (compatibilidade com nomes antigos e novos)
+foreach ($convites as &$convite) {
+    // Se tem nome antigo mas não tem novo, copiar
+    if (!isset($convite['data_expiracao']) && isset($convite['validade_ate'])) {
+        $convite['data_expiracao'] = $convite['validade_ate'];
+    }
+    if (!isset($convite['data_aceite']) && isset($convite['usado_em'])) {
+        $convite['data_aceite'] = $convite['usado_em'];
+    }
+}
+unset($convite); // Quebrar referência
 
 // Buscar informações da equipe
 $stmt = $pdo->prepare("SELECT nome FROM equipes WHERE id = ?");
