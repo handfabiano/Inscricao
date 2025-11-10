@@ -16,15 +16,16 @@ echo "======================================\n\n";
 
 // Lista de migrations na ordem correta
 $migrations = [
-    '001_create_multi_tenancy_structure.sql',
-    '002_add_organization_id_to_existing_tables.sql',
-    '003_create_payment_system.sql',
-    '004_add_2fa_support.sql',
-    '005_create_championship_system.sql',
-    '006_create_statistics_system.sql',
-    '007_create_ranking_system.sql',
-    '008_create_analytics_system.sql',
-    '009_create_integrations_system.sql'
+    '000_create_base_schema.sql',              // NOVO: Schema base (tabelas fundamentais)
+    '001_create_multi_tenancy_structure.sql',  // Multi-tenancy e planos
+    '002_add_organization_id_to_existing_tables.sql', // Adiciona organizacao_id
+    '003_create_payment_system.sql',           // Sistema de pagamentos
+    '004_add_2fa_support.sql',                 // Autenticação 2FA
+    '005_create_championship_system.sql',      // Sistema de campeonatos
+    '006_create_statistics_system.sql',        // Estatísticas
+    '007_create_ranking_system.sql',           // Rankings e ELO
+    '008_create_analytics_system.sql',         // Analytics e BI
+    '009_create_integrations_system.sql'       // Integrações externas
 ];
 
 try {
