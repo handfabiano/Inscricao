@@ -1,80 +1,77 @@
 <?php
-// Habilitar exibição de erros para debug
-ini_set('display_errors', 1);
+/**
+ * Página Pública Principal
+ * Sistema de Gestão Esportiva
+ */
+
+// Configurações de erro (desativar em produção)
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
+
+// Tentar conectar ao banco
+$db_connected = false;
+$pdo = null;
 
 try {
     require_once '../config/config.php';
     $pdo = getDBConnection();
+    $db_connected = ($pdo !== null);
+} catch (Exception $e) {
+    $db_connected = false;
+    error_log("Erro na página pública: " . $e->getMessage());
+}
 
-    // Verificar se a conexão foi estabelecida
-    if ($pdo === null) {
-        throw new Exception("A conexão com o banco de dados retornou null");
+// Inicializar variáveis
+$totalCompeticoes = 0;
+$totalEquipes = 0;
+$totalAtletas = 0;
+$totalInscricoes = 0;
+$competicoesAbertas = [];
+$proximasCompeticoes = [];
+
+// Se conectado, buscar dados
+if ($db_connected) {
+    try {
+        // Verificar se tabelas existem
+        $stmt = $pdo->query("SHOW TABLES LIKE 'competicoes'");
+        $table_exists = $stmt->rowCount() > 0;
+
+        if ($table_exists) {
+            // Buscar competições abertas
+            $stmt = $pdo->query("
+                SELECT * FROM competicoes
+                WHERE status = 'Aberta'
+                ORDER BY data_inicio_inscricoes DESC
+                LIMIT 6
+            ");
+            $competicoesAbertas = $stmt->fetchAll();
+
+            // Buscar próximas competições
+            $stmt = $pdo->query("
+                SELECT * FROM competicoes
+                WHERE data_inicio_evento >= CURDATE()
+                ORDER BY data_inicio_evento ASC
+                LIMIT 6
+            ");
+            $proximasCompeticoes = $stmt->fetchAll();
+
+            // Estatísticas
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM competicoes");
+            $totalCompeticoes = $stmt->fetch()['total'];
+
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes WHERE status = 'Aprovada'");
+            $totalEquipes = $stmt->fetch()['total'];
+
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas WHERE ativo = 1");
+            $totalAtletas = $stmt->fetch()['total'];
+
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes WHERE status = 'Confirmada'");
+            $totalInscricoes = $stmt->fetch()['total'];
+        }
+    } catch (Exception $e) {
+        // Silenciar erros e usar valores padrão
+        error_log("Erro ao buscar dados: " . $e->getMessage());
     }
-} catch (Exception $e) {
-    die("Erro ao conectar ao banco de dados: " . $e->getMessage());
-}
-
-// Buscar competições abertas
-try {
-    $stmt = $pdo->query("
-        SELECT * FROM competicoes
-        WHERE status = 'Aberta'
-        ORDER BY data_inicio_inscricoes DESC
-        LIMIT 6
-    ");
-    $competicoesAbertas = $stmt->fetchAll();
-} catch (Exception $e) {
-    $competicoesAbertas = [];
-}
-
-// Buscar próximas competições
-try {
-    $stmt = $pdo->query("
-        SELECT * FROM competicoes
-        WHERE data_inicio_evento >= CURDATE()
-        ORDER BY data_inicio_evento ASC
-        LIMIT 6
-    ");
-    $proximasCompeticoes = $stmt->fetchAll();
-} catch (Exception $e) {
-    $proximasCompeticoes = [];
-}
-
-// Buscar resultados recentes (competições com resultados)
-try {
-    $stmt = $pdo->query("
-        SELECT DISTINCT c.*, COUNT(DISTINCT i.id) as total_inscritos
-        FROM competicoes c
-        INNER JOIN inscricoes_competicoes i ON c.id = i.competicao_id
-        WHERE i.colocacao IS NOT NULL
-        GROUP BY c.id
-        ORDER BY c.data_inicio_evento DESC
-        LIMIT 6
-    ");
-    $resultadosRecentes = $stmt->fetchAll();
-} catch (Exception $e) {
-    $resultadosRecentes = [];
-}
-
-// Estatísticas gerais
-try {
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM competicoes");
-    $totalCompeticoes = $stmt->fetch()['total'];
-
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes WHERE status = 'Aprovada'");
-    $totalEquipes = $stmt->fetch()['total'];
-
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas WHERE ativo = 1");
-    $totalAtletas = $stmt->fetch()['total'];
-
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM inscricoes_competicoes WHERE status = 'Confirmada'");
-    $totalInscricoes = $stmt->fetch()['total'];
-} catch (Exception $e) {
-    $totalCompeticoes = 0;
-    $totalEquipes = 0;
-    $totalAtletas = 0;
-    $totalInscricoes = 0;
 }
 ?>
 <!DOCTYPE html>
@@ -117,6 +114,11 @@ try {
             font-size: 24px;
             margin: 0 auto 15px;
         }
+        .alert-setup {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+        }
     </style>
 </head>
 <body>
@@ -150,6 +152,28 @@ try {
             </div>
         </div>
     </nav>
+
+    <?php if (!$db_connected): ?>
+    <!-- Alert de Configuração -->
+    <div class="container mt-4">
+        <div class="alert alert-setup shadow-lg" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="fas fa-exclamation-triangle fa-3x"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h4 class="alert-heading mb-2">⚙️ Sistema em Configuração</h4>
+                    <p class="mb-2">O banco de dados ainda não está configurado. Siga os passos:</p>
+                    <ol class="mb-2">
+                        <li>Configure as credenciais em <code>config/database.php</code></li>
+                        <li>Execute as migrations se necessário</li>
+                        <li>Verifique os logs de erro para mais detalhes</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -246,11 +270,11 @@ try {
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <span class="badge bg-success">Aberta</span>
-                                <span class="badge bg-info"><?php echo htmlspecialchars($comp['modalidade']); ?></span>
+                                <span class="badge bg-info"><?php echo htmlspecialchars($comp['modalidade'] ?? 'N/A'); ?></span>
                             </div>
                             <h5 class="card-title"><?php echo htmlspecialchars($comp['nome']); ?></h5>
                             <p class="card-text text-muted small">
-                                <?php echo htmlspecialchars(substr($comp['descricao'], 0, 100)); ?>...
+                                <?php echo htmlspecialchars(substr($comp['descricao'] ?? '', 0, 100)); ?><?php echo strlen($comp['descricao'] ?? '') > 100 ? '...' : ''; ?>
                             </p>
                             <hr>
                             <div class="small">
@@ -261,7 +285,7 @@ try {
                                 </p>
                                 <p class="mb-2">
                                     <i class="fas fa-map-marker-alt text-danger"></i>
-                                    <strong>Local:</strong> <?php echo htmlspecialchars($comp['local']); ?>
+                                    <strong>Local:</strong> <?php echo htmlspecialchars($comp['local_evento'] ?? 'A definir'); ?>
                                 </p>
                                 <p class="mb-0 text-success">
                                     <i class="fas fa-clock"></i>
@@ -313,11 +337,11 @@ try {
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <span class="badge bg-primary">Em Breve</span>
-                                <span class="badge bg-info"><?php echo htmlspecialchars($comp['modalidade']); ?></span>
+                                <span class="badge bg-info"><?php echo htmlspecialchars($comp['modalidade'] ?? 'N/A'); ?></span>
                             </div>
                             <h5 class="card-title"><?php echo htmlspecialchars($comp['nome']); ?></h5>
                             <p class="card-text text-muted small">
-                                <?php echo htmlspecialchars(substr($comp['descricao'], 0, 100)); ?>...
+                                <?php echo htmlspecialchars(substr($comp['descricao'] ?? '', 0, 100)); ?><?php echo strlen($comp['descricao'] ?? '') > 100 ? '...' : ''; ?>
                             </p>
                             <hr>
                             <div class="small">
@@ -328,7 +352,7 @@ try {
                                 </p>
                                 <p class="mb-0">
                                     <i class="fas fa-map-marker-alt text-danger"></i>
-                                    <strong>Local:</strong> <?php echo htmlspecialchars($comp['local']); ?>
+                                    <strong>Local:</strong> <?php echo htmlspecialchars($comp['local_evento'] ?? 'A definir'); ?>
                                 </p>
                             </div>
                         </div>
