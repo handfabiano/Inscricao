@@ -29,8 +29,8 @@ try {
     $stmt = $pdo->prepare("
         SELECT * FROM competicoes
         WHERE id = ? AND status = 'Aberta'
-        AND data_inicio_inscricoes <= CURDATE()
-        AND data_fim_inscricoes >= CURDATE()
+        AND data_inicio_inscricao <= CURDATE()
+        AND data_fim_inscricao >= CURDATE()
     ");
     $stmt->execute([$competicaoId]);
     $competicao = $stmt->fetch();

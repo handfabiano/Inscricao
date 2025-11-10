@@ -37,8 +37,9 @@ define('BANNER_PATH', UPLOAD_PATH . 'banners/');
 define('FOTO_PATH', UPLOAD_PATH . 'fotos/');
 define('DOCUMENTO_PATH', UPLOAD_PATH . 'documentos/');
 
-// URLs públicas
-define('UPLOAD_URL', BASE_URL . '/public/uploads/');
+// URLs públicas (usar caminhos relativos para funcionar em qualquer servidor)
+// Se você acessar exemplo.com/admin/atletas.php, vai buscar exemplo.com/public/uploads/
+define('UPLOAD_URL', '/public/uploads/');
 define('BANNER_URL', UPLOAD_URL . 'banners/');
 define('FOTO_URL', UPLOAD_URL . 'fotos/');
 define('DOCUMENTO_URL', UPLOAD_URL . 'documentos/');
