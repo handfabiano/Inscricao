@@ -8,7 +8,7 @@ RewriteEngine On
 # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Proteger arquivos de configuração
-<FilesMatch "^(config|\.env|composer\.(json|lock))">
+<FilesMatch "^(config\.php|config\.local\.php|database\.php|\.env|composer\.(json|lock))$">
     Order allow,deny
     Deny from all
 </FilesMatch>

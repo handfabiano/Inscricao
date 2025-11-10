@@ -13,7 +13,7 @@ $pdo = getDBConnection();
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['acao'] === 'criar') {
     try {
         // Validar campos obrigatórios
-        $camposObrigatorios = ['nome', 'data_inicio_inscricoes', 'data_fim_inscricoes', 'data_inicio_evento', 'data_fim_evento', 'modalidade_id', 'genero_permitido', 'min_atletas', 'max_atletas'];
+        $camposObrigatorios = ['nome', 'data_inicio_inscricao', 'data_fim_inscricao', 'data_inicio_evento', 'data_fim_evento', 'modalidade_id', 'genero_permitido', 'min_atletas', 'max_atletas'];
 
         foreach ($camposObrigatorios as $campo) {
             if (empty($_POST[$campo])) {
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['ac
         $stmt = $pdo->prepare("
             INSERT INTO competicoes (
                 nome, descricao, banner_path,
-                data_inicio_inscricoes, data_fim_inscricoes,
+                data_inicio_inscricao, data_fim_inscricao,
                 data_inicio_evento, data_fim_evento,
                 modalidade_id, categorias_permitidas, genero_permitido,
                 min_atletas, max_atletas, taxa_inscricao,
@@ -54,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['ac
             sanitize($_POST['nome']),
             sanitize($_POST['descricao'] ?? ''),
             $bannerFileName,
-            $_POST['data_inicio_inscricoes'],
-            $_POST['data_fim_inscricoes'],
+            $_POST['data_inicio_inscricao'],
+            $_POST['data_fim_inscricao'],
             $_POST['data_inicio_evento'],
             $_POST['data_fim_evento'],
             (int)$_POST['modalidade_id'],
@@ -228,8 +228,8 @@ $pageTitle = 'Gerenciar Competições';
                                         <div class="mb-1">
                                             <i class="fas fa-calendar-alt"></i>
                                             <strong>Inscrições:</strong><br>
-                                            <?php echo formatarData($comp['data_inicio_inscricoes']); ?> até
-                                            <?php echo formatarData($comp['data_fim_inscricoes']); ?>
+                                            <?php echo formatarData($comp['data_inicio_inscricao']); ?> até
+                                            <?php echo formatarData($comp['data_fim_inscricao']); ?>
                                         </div>
                                         <div>
                                             <i class="fas fa-users"></i>
@@ -325,20 +325,20 @@ $pageTitle = 'Gerenciar Competições';
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-3">
-                                <label for="data_inicio_inscricoes" class="form-label">Início das Inscrições *</label>
+                                <label for="data_inicio_inscricao" class="form-label">Início das Inscrições *</label>
                                 <input type="date"
                                        class="form-control"
-                                       id="data_inicio_inscricoes"
-                                       name="data_inicio_inscricoes"
+                                       id="data_inicio_inscricao"
+                                       name="data_inicio_inscricao"
                                        required>
                             </div>
 
                             <div class="col-md-3">
-                                <label for="data_fim_inscricoes" class="form-label">Fim das Inscrições *</label>
+                                <label for="data_fim_inscricao" class="form-label">Fim das Inscrições *</label>
                                 <input type="date"
                                        class="form-control"
-                                       id="data_fim_inscricoes"
-                                       name="data_fim_inscricoes"
+                                       id="data_fim_inscricao"
+                                       name="data_fim_inscricao"
                                        required>
                             </div>
 
@@ -537,8 +537,8 @@ $pageTitle = 'Gerenciar Competições';
 
             if (form) {
                 form.addEventListener('submit', function(e) {
-                    const dataInicioInscricoes = document.getElementById('data_inicio_inscricoes').value;
-                    const dataFimInscricoes = document.getElementById('data_fim_inscricoes').value;
+                    const dataInicioInscricoes = document.getElementById('data_inicio_inscricao').value;
+                    const dataFimInscricoes = document.getElementById('data_fim_inscricao').value;
                     const dataInicioEvento = document.getElementById('data_inicio_evento').value;
                     const dataFimEvento = document.getElementById('data_fim_evento').value;
 

@@ -361,10 +361,18 @@ $pageTitle = 'Gerenciar Atletas';
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
-                                        <button class="btn btn-sm btn-info"
-                                                onclick="verDetalhes(<?php echo $atleta['id']; ?>)">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-info"
+                                                    onclick="verDetalhes(<?php echo $atleta['id']; ?>)"
+                                                    title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a href="editar_atleta.php?id=<?php echo $atleta['id']; ?>"
+                                               class="btn btn-sm btn-primary"
+                                               title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
