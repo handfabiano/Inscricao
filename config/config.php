@@ -16,8 +16,14 @@ require_once __DIR__ . '/database.php';
 // CONFIGURAÇÕES GERAIS
 // ============================================================================
 
-// URL base do sistema (AJUSTAR PARA SUA URL)
-define('BASE_URL', 'https://mediumblue-rhinoceros-869852.hostingersite.com');
+// Detectar ambiente e definir URL base automaticamente
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+$scriptDir = ($scriptDir === '/' || $scriptDir === '\\') ? '' : $scriptDir;
+
+// URL base do sistema (detectada automaticamente)
+define('BASE_URL', $protocol . '://' . $host . $scriptDir);
 
 // Timezone
 date_default_timezone_set('America/Boa_Vista');
@@ -70,7 +76,15 @@ function isEquipeLoggedIn() {
  */
 function requireAdminLogin() {
     if (!isAdminLoggedIn()) {
-        header('Location: ' . BASE_URL . '/admin/login.php');
+        // Determinar o caminho correto baseado no diretório atual
+        $currentPath = $_SERVER['PHP_SELF'];
+        if (strpos($currentPath, '/admin/') !== false) {
+            // Já está no diretório admin
+            header('Location: login.php');
+        } else {
+            // Está em outro diretório
+            header('Location: /admin/login.php');
+        }
         exit;
     }
 }
@@ -80,7 +94,15 @@ function requireAdminLogin() {
  */
 function requireEquipeLogin() {
     if (!isEquipeLoggedIn()) {
-        header('Location: ' . BASE_URL . '/equipe/login.php');
+        // Determinar o caminho correto baseado no diretório atual
+        $currentPath = $_SERVER['PHP_SELF'];
+        if (strpos($currentPath, '/equipe/') !== false) {
+            // Já está no diretório equipe
+            header('Location: login.php');
+        } else {
+            // Está em outro diretório
+            header('Location: /equipe/login.php');
+        }
         exit;
     }
 }

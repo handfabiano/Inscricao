@@ -22,11 +22,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $validadeAte = date('Y-m-d H:i:s', strtotime("+$diasValidade days"));
 
-            $stmt = $pdo->prepare("
-                INSERT INTO convites_atletas (equipe_id, token, email_atleta, nome_atleta, validade_ate)
-                VALUES (?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([$equipeId, $token, $emailAtleta, $nomeAtleta, $validadeAte]);
+            // Tenta usar o nome novo da coluna, se falhar, usa o antigo
+            try {
+                $stmt = $pdo->prepare("
+                    INSERT INTO convites_atletas (equipe_id, token, email_atleta, nome_atleta, data_expiracao)
+                    VALUES (?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([$equipeId, $token, $emailAtleta, $nomeAtleta, $validadeAte]);
+            } catch (PDOException $e) {
+                // Se falhar, pode ser que ainda use o nome antigo
+                $stmt = $pdo->prepare("
+                    INSERT INTO convites_atletas (equipe_id, token, email_atleta, nome_atleta, validade_ate)
+                    VALUES (?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([$equipeId, $token, $emailAtleta, $nomeAtleta, $validadeAte]);
+            }
 
             $mensagem = "Convite gerado com sucesso! Copie o link abaixo e envie para o atleta.";
             $tipoMensagem = "success";
@@ -60,6 +70,18 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$equipeId]);
 $convites = $stmt->fetchAll();
+
+// Normalizar nomes de colunas (compatibilidade com nomes antigos e novos)
+foreach ($convites as &$convite) {
+    // Se tem nome antigo mas não tem novo, copiar
+    if (!isset($convite['data_expiracao']) && isset($convite['validade_ate'])) {
+        $convite['data_expiracao'] = $convite['validade_ate'];
+    }
+    if (!isset($convite['data_aceite']) && isset($convite['usado_em'])) {
+        $convite['data_aceite'] = $convite['usado_em'];
+    }
+}
+unset($convite); // Quebrar referência
 
 // Buscar informações da equipe
 $stmt = $pdo->prepare("SELECT nome FROM equipes WHERE id = ?");
@@ -263,7 +285,7 @@ $pageTitle = 'Convites para Atletas';
                             <?php foreach ($convites as $convite): ?>
                             <div class="convite-card card mb-3" style="border-left-color: <?php
                                 echo $convite['status'] === 'Aceito' ? '#198754' :
-                                    ($convite['status'] === 'Expirado' || strtotime($convite['validade_ate']) < time() ? '#dc3545' : '#ffc107');
+                                    ($convite['status'] === 'Expirado' || strtotime($convite['data_expiracao']) < time() ? '#dc3545' : '#ffc107');
                             ?>;">
                                 <div class="card-body">
                                     <div class="row align-items-center">
@@ -293,17 +315,17 @@ $pageTitle = 'Convites para Atletas';
                                             </p>
                                             <p class="mb-1 small">
                                                 <i class="fas fa-clock"></i>
-                                                Válido até: <?php echo date('d/m/Y H:i', strtotime($convite['validade_ate'])); ?>
+                                                Válido até: <?php echo date('d/m/Y H:i', strtotime($convite['data_expiracao'])); ?>
                                             </p>
 
                                             <?php
                                             $statusClass = match($convite['status']) {
                                                 'Aceito' => 'success',
                                                 'Expirado' => 'danger',
-                                                default => (strtotime($convite['validade_ate']) < time() ? 'danger' : 'warning')
+                                                default => (strtotime($convite['data_expiracao']) < time() ? 'danger' : 'warning')
                                             };
                                             $statusText = $convite['status'];
-                                            if ($convite['status'] === 'Pendente' && strtotime($convite['validade_ate']) < time()) {
+                                            if ($convite['status'] === 'Pendente' && strtotime($convite['data_expiracao']) < time()) {
                                                 $statusText = 'Expirado';
                                             }
                                             ?>
@@ -311,15 +333,15 @@ $pageTitle = 'Convites para Atletas';
                                                 <?php echo $statusText; ?>
                                             </span>
 
-                                            <?php if ($convite['status'] === 'Aceito' && $convite['usado_em']): ?>
+                                            <?php if ($convite['status'] === 'Aceito' && !empty($convite['data_aceite'])): ?>
                                                 <p class="mb-0 small text-success mt-1">
                                                     <i class="fas fa-check-circle"></i>
-                                                    Usado em: <?php echo date('d/m/Y H:i', strtotime($convite['usado_em'])); ?>
+                                                    Usado em: <?php echo date('d/m/Y H:i', strtotime($convite['data_aceite'])); ?>
                                                 </p>
                                             <?php endif; ?>
                                         </div>
                                         <div class="col-md-4 text-end">
-                                            <?php if ($convite['status'] === 'Pendente' && strtotime($convite['validade_ate']) > time()): ?>
+                                            <?php if ($convite['status'] === 'Pendente' && strtotime($convite['data_expiracao']) > time()): ?>
                                                 <?php
                                                 // Obter o protocolo
                                                 $protocolo = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
