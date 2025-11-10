@@ -282,7 +282,7 @@ $pageTitle = 'Gerenciar Equipes';
                                     <td>
                                         <div><?php echo htmlspecialchars($equipe['responsavel_nome']); ?></div>
                                         <small class="text-muted">
-                                            <i class="fas fa-envelope"></i> <?php echo htmlspecialchars($equipe['email']); ?>
+                                            <i class="fas fa-envelope"></i> <?php echo htmlspecialchars($equipe['responsavel_email']); ?>
                                         </small>
                                     </td>
                                     <td>
