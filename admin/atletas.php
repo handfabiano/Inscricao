@@ -18,10 +18,10 @@ $totalAtivos = $stmt->fetch()['total'];
 $stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas WHERE ativo = 0");
 $totalInativos = $stmt->fetch()['total'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas WHERE genero = 'M' AND ativo = 1");
+$stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas WHERE genero = 'Masculino' AND ativo = 1");
 $totalMasculino = $stmt->fetch()['total'];
 
-$stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas WHERE genero = 'F' AND ativo = 1");
+$stmt = $pdo->query("SELECT COUNT(*) as total FROM atletas WHERE genero = 'Feminino' AND ativo = 1");
 $totalFeminino = $stmt->fetch()['total'];
 
 // Construir query com filtros
@@ -249,8 +249,8 @@ $pageTitle = 'Gerenciar Atletas';
                         </label>
                         <select name="genero" class="form-select">
                             <option value="">Todos</option>
-                            <option value="M" <?php echo $filtroGenero === 'M' ? 'selected' : ''; ?>>Masculino</option>
-                            <option value="F" <?php echo $filtroGenero === 'F' ? 'selected' : ''; ?>>Feminino</option>
+                            <option value="Masculino" <?php echo $filtroGenero === 'Masculino' ? 'selected' : ''; ?>>Masculino</option>
+                            <option value="Feminino" <?php echo $filtroGenero === 'Feminino' ? 'selected' : ''; ?>>Feminino</option>
                         </select>
                     </div>
                     <div class="col-md-1">
@@ -334,7 +334,7 @@ $pageTitle = 'Gerenciar Atletas';
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
-                                        <?php if ($atleta['genero'] === 'M'): ?>
+                                        <?php if ($atleta['genero'] === 'Masculino'): ?>
                                             <span class="badge bg-primary"><i class="fas fa-mars"></i> Masculino</span>
                                         <?php else: ?>
                                             <span class="badge" style="background-color: #e83e8c;"><i class="fas fa-venus"></i> Feminino</span>
@@ -567,7 +567,7 @@ $pageTitle = 'Gerenciar Atletas';
                                 <p><strong><i class="fas fa-id-card"></i> CPF:</strong> ${atleta.cpf}</p>
                                 <p><strong><i class="fas fa-birthday-cake"></i> Data de Nascimento:</strong> ${atleta.data_nascimento}</p>
                                 <p><strong><i class="fas fa-calendar"></i> Idade:</strong> ${atleta.idade} anos</p>
-                                <p><strong><i class="fas fa-venus-mars"></i> Gênero:</strong> ${atleta.genero === 'M' ? 'Masculino' : 'Feminino'}</p>
+                                <p><strong><i class="fas fa-venus-mars"></i> Gênero:</strong> ${atleta.genero === 'Masculino' ? 'Masculino' : 'Feminino'}</p>
                     `;
 
                     if (atleta.equipe_nome) {
