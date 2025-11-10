@@ -39,7 +39,7 @@ function getRelatorioGeral($pdo, $dataInicio, $dataFim) {
                SUM(CASE WHEN status = 'Aberta' THEN 1 ELSE 0 END) as abertas,
                SUM(CASE WHEN status = 'Encerrada' THEN 1 ELSE 0 END) as encerradas
         FROM competicoes
-        WHERE DATE(data_inicio_inscricoes) BETWEEN ? AND ?
+        WHERE DATE(data_inicio_inscricao) BETWEEN ? AND ?
     ");
     $stmt->execute([$dataInicio, $dataFim]);
     $stats['competicoes'] = $stmt->fetch();
@@ -80,7 +80,7 @@ function getInscricoesPorCompeticao($pdo, $dataInicio, $dataFim) {
         FROM competicoes c
         LEFT JOIN inscricoes_competicoes i ON c.id = i.competicao_id
             AND DATE(i.created_at) BETWEEN ? AND ?
-        WHERE DATE(c.data_inicio_inscricoes) BETWEEN ? AND ?
+        WHERE DATE(c.data_inicio_inscricao) BETWEEN ? AND ?
         GROUP BY c.id
         ORDER BY total_inscricoes DESC
     ");
