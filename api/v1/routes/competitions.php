@@ -123,8 +123,8 @@ function registerCompetitionRoutes($router) {
 
         // Validar campos obrigatórios
         ApiRouter::validateRequired($data, [
-            'nome', 'modalidade_id', 'data_inicio_inscricao',
-            'data_fim_inscricao', 'data_inicio_evento', 'data_fim_evento'
+            'nome', 'modalidade_id', 'data_inicio_inscricoes',
+            'data_fim_inscricoes', 'data_inicio_evento', 'data_fim_evento'
         ]);
 
         // Verificar limite de eventos
@@ -139,7 +139,7 @@ function registerCompetitionRoutes($router) {
             $stmt = $pdo->prepare("
                 INSERT INTO competicoes (
                     organizacao_id, nome, descricao, modalidade_id,
-                    data_inicio_inscricao, data_fim_inscricao,
+                    data_inicio_inscricoes, data_fim_inscricoes,
                     data_inicio_evento, data_fim_evento,
                     categorias_permitidas, genero_permitido,
                     min_atletas, max_atletas, taxa_inscricao,
@@ -152,8 +152,8 @@ function registerCompetitionRoutes($router) {
                 $data['nome'],
                 $data['descricao'] ?? null,
                 $data['modalidade_id'],
-                $data['data_inicio_inscricao'],
-                $data['data_fim_inscricao'],
+                $data['data_inicio_inscricoes'],
+                $data['data_fim_inscricoes'],
                 $data['data_inicio_evento'],
                 $data['data_fim_evento'],
                 isset($data['categorias_permitidas']) ? json_encode($data['categorias_permitidas']) : null,
@@ -200,7 +200,7 @@ function registerCompetitionRoutes($router) {
             $pdo = getDBConnection();
 
             $campos_permitidos = [
-                'nome', 'descricao', 'data_inicio_inscricao', 'data_fim_inscricao',
+                'nome', 'descricao', 'data_inicio_inscricoes', 'data_fim_inscricoes',
                 'data_inicio_evento', 'data_fim_evento', 'categorias_permitidas',
                 'genero_permitido', 'min_atletas', 'max_atletas', 'taxa_inscricao',
                 'local_evento', 'cidade', 'estado', 'regulamento', 'status'

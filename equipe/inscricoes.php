@@ -35,8 +35,8 @@ try {
         FROM competicoes c
         LEFT JOIN modalidades m ON c.modalidade_id = m.id
         WHERE c.status = 'Aberta'
-        AND c.data_inicio_inscricao <= ?
-        AND c.data_fim_inscricao >= ?
+        AND c.data_inicio_inscricoes <= ?
+        AND c.data_fim_inscricoes >= ?
         ORDER BY c.created_at DESC
     ");
     $stmt->execute([$equipeId, $hoje, $hoje]);
@@ -289,7 +289,7 @@ $pageTitle = 'Inscrições em Competições';
                                         <ul class="list-unstyled small mb-0">
                                             <li class="mb-1">
                                                 <i class="fas fa-calendar text-muted"></i>
-                                                <strong>Inscrições até:</strong> <?php echo formatarData($comp['data_fim_inscricao']); ?>
+                                                <strong>Inscrições até:</strong> <?php echo formatarData($comp['data_fim_inscricoes']); ?>
                                             </li>
                                             <li class="mb-1">
                                                 <i class="fas fa-list text-muted"></i>

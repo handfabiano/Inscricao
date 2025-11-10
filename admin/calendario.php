@@ -31,8 +31,8 @@ $sql = "
     WHERE (
         (c.data_inicio_evento BETWEEN ? AND ?)
         OR (c.data_fim_evento BETWEEN ? AND ?)
-        OR (c.data_inicio_inscricao BETWEEN ? AND ?)
-        OR (c.data_fim_inscricao BETWEEN ? AND ?)
+        OR (c.data_inicio_inscricoes BETWEEN ? AND ?)
+        OR (c.data_fim_inscricoes BETWEEN ? AND ?)
     )
 ";
 
@@ -63,7 +63,7 @@ foreach ($competicoes as $comp) {
     ];
 
     // Data de início das inscrições
-    $dataInicioInsc = date('Y-m-d', strtotime($comp['data_inicio_inscricao']));
+    $dataInicioInsc = date('Y-m-d', strtotime($comp['data_inicio_inscricoes']));
     if (!isset($eventosPorDia[$dataInicioInsc])) {
         $eventosPorDia[$dataInicioInsc] = [];
     }
@@ -73,7 +73,7 @@ foreach ($competicoes as $comp) {
     ];
 
     // Data de fim das inscrições
-    $dataFimInsc = date('Y-m-d', strtotime($comp['data_fim_inscricao']));
+    $dataFimInsc = date('Y-m-d', strtotime($comp['data_fim_inscricoes']));
     if (!isset($eventosPorDia[$dataFimInsc])) {
         $eventosPorDia[$dataFimInsc] = [];
     }

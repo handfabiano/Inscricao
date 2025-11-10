@@ -30,7 +30,7 @@ $stmt = $pdo->query("
     FROM competicoes c
     LEFT JOIN modalidades m ON c.modalidade_id = m.id
     WHERE c.status = 'Aberta'
-    ORDER BY c.data_fim_inscricao ASC
+    ORDER BY c.data_fim_inscricoes ASC
     LIMIT 5
 ");
 $competicoesAbertas = $stmt->fetchAll();
@@ -167,7 +167,7 @@ $competicoesAbertas = $stmt->fetchAll();
                                         <h4 style="margin: 0 0 0.5rem;"><?php echo htmlspecialchars($comp['nome']); ?></h4>
                                         <p style="margin: 0; font-size: 0.9rem; color: #64748b;">
                                             <strong><?php echo htmlspecialchars($comp['modalidade_nome']); ?></strong><br>
-                                            Inscrições até: <?php echo formatarData($comp['data_fim_inscricao']); ?>
+                                            Inscrições até: <?php echo formatarData($comp['data_fim_inscricoes']); ?>
                                         </p>
                                     </div>
                                 </div>
