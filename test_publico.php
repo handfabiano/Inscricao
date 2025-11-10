@@ -24,7 +24,7 @@ try {
     $stmt = $pdo->query("
         SELECT * FROM competicoes
         WHERE status = 'Aberta'
-        ORDER BY data_inicio_inscricao DESC
+        ORDER BY data_inicio_inscricoes DESC
         LIMIT 6
     ");
     $competicoesAbertas = $stmt->fetchAll();
