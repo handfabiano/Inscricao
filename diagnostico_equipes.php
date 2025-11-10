@@ -62,7 +62,7 @@ try {
     // 4. Verificar campos NULL obrigatórios
     echo "<h2>Verificação de Dados:</h2>";
     $stmt = $pdo->query("
-        SELECT id, nome, responsavel_email, responsavel_telefone, senha, status, organizacao_id
+        SELECT id, nome, responsavel_nome, responsavel_cpf, responsavel_email, cidade, estado, organizacao_id, status
         FROM equipes
         WHERE nome IS NULL OR responsavel_nome IS NULL OR responsavel_cpf IS NULL
     ");
