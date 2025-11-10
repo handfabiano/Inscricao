@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS equipes (
 -- Tabela de Atletas
 CREATE TABLE IF NOT EXISTS atletas (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    equipe_id INT NOT NULL,
+    equipe_atual_id INT NOT NULL COMMENT 'ID da equipe do atleta',
     nome VARCHAR(255) NOT NULL,
     cpf VARCHAR(14) NOT NULL UNIQUE,
     rg VARCHAR(20),
@@ -129,11 +129,12 @@ CREATE TABLE IF NOT EXISTS atletas (
     estado VARCHAR(2),
     foto VARCHAR(255),
     documento_identidade VARCHAR(255),
+    data_entrada_equipe DATE,
     ativo BOOLEAN DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (equipe_id) REFERENCES equipes(id) ON DELETE CASCADE,
-    INDEX idx_equipe (equipe_id),
+    FOREIGN KEY (equipe_atual_id) REFERENCES equipes(id) ON DELETE CASCADE,
+    INDEX idx_equipe (equipe_atual_id),
     INDEX idx_cpf (cpf),
     INDEX idx_ativo (ativo),
     INDEX idx_nome (nome)

@@ -47,7 +47,7 @@ $totalRejeitadas = $stmt->fetch()['total'];
 $sql = "
     SELECT
         e.*,
-        (SELECT COUNT(*) FROM atletas WHERE equipe_atual_id = e.id AND ativo = 1) as total_atletas,
+        (SELECT COUNT(*) FROM atletas WHERE equipe_id = e.id AND ativo = 1) as total_atletas,
         (SELECT COUNT(*) FROM inscricoes_competicoes WHERE equipe_id = e.id) as total_inscricoes
     FROM equipes e
     WHERE 1=1
@@ -282,7 +282,7 @@ $pageTitle = 'Gerenciar Equipes';
                                     <td>
                                         <div><?php echo htmlspecialchars($equipe['responsavel_nome']); ?></div>
                                         <small class="text-muted">
-                                            <i class="fas fa-envelope"></i> <?php echo htmlspecialchars($equipe['responsavel_email']); ?>
+                                            <i class="fas fa-envelope"></i> <?php echo htmlspecialchars($equipe['email']); ?>
                                         </small>
                                     </td>
                                     <td>
