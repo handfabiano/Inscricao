@@ -46,6 +46,15 @@ $pageTitle = 'Meus Atletas';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="<?php echo BASE_URL; ?>/public/css/style.css" rel="stylesheet">
+    <style>
+        .foto-circular {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #dee2e6;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -238,11 +247,18 @@ $pageTitle = 'Meus Atletas';
                                         </small>
                                     </td>
                                     <td class="text-center">
-                                        <button class="btn btn-sm btn-primary"
-                                                onclick="verDetalhes(<?php echo $atleta['id']; ?>)"
-                                                title="Ver detalhes completos">
-                                            <i class="fas fa-eye"></i> Ver Detalhes
-                                        </button>
+                                        <div class="btn-group" role="group">
+                                            <a href="editar_atleta.php?id=<?php echo $atleta['id']; ?>"
+                                               class="btn btn-sm btn-warning"
+                                               title="Editar atleta">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-primary"
+                                                    onclick="verDetalhes(<?php echo $atleta['id']; ?>)"
+                                                    title="Ver detalhes completos">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
