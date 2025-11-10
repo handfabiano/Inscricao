@@ -88,15 +88,15 @@ function getInscricoesPorCompeticao($pdo, $dataInicio, $dataFim) {
     return $stmt->fetchAll();
 }
 
-// Relatório de equipes por município
+// Relatório de equipes por cidade
 function getEquipesPorMunicipio($pdo) {
     $stmt = $pdo->query("
-        SELECT municipio,
+        SELECT cidade as municipio,
                COUNT(*) as total,
                SUM(CASE WHEN status = 'Aprovada' THEN 1 ELSE 0 END) as aprovadas,
                SUM(CASE WHEN status = 'Pendente' THEN 1 ELSE 0 END) as pendentes
         FROM equipes
-        GROUP BY municipio
+        GROUP BY cidade
         ORDER BY total DESC
         LIMIT 20
     ");

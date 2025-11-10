@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao'])) {
 // Filtros
 $filtroNome = $_GET['nome'] ?? '';
 $filtroStatus = $_GET['status'] ?? '';
-$filtroMunicipio = $_GET['municipio'] ?? '';
+$filtroCidade = $_GET['cidade'] ?? '';
 
 // Buscar estatísticas
 $stmt = $pdo->query("SELECT COUNT(*) as total FROM equipes WHERE status = 'Pendente'");
@@ -47,7 +47,7 @@ $totalRejeitadas = $stmt->fetch()['total'];
 $sql = "
     SELECT
         e.*,
-        (SELECT COUNT(*) FROM atletas WHERE equipe_atual_id = e.id AND ativo = 1) as total_atletas,
+        (SELECT COUNT(*) FROM atletas WHERE equipe_id = e.id AND ativo = 1) as total_atletas,
         (SELECT COUNT(*) FROM inscricoes_competicoes WHERE equipe_id = e.id) as total_inscricoes
     FROM equipes e
     WHERE 1=1
@@ -65,9 +65,9 @@ if (!empty($filtroStatus)) {
     $params[] = $filtroStatus;
 }
 
-if (!empty($filtroMunicipio)) {
-    $sql .= " AND e.municipio LIKE ?";
-    $params[] = "%$filtroMunicipio%";
+if (!empty($filtroCidade)) {
+    $sql .= " AND e.cidade LIKE ?";
+    $params[] = "%$filtroCidade%";
 }
 
 $sql .= " ORDER BY e.created_at DESC";
@@ -207,11 +207,11 @@ $pageTitle = 'Gerenciar Equipes';
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">
-                            <i class="fas fa-map-marker-alt"></i> Município
+                            <i class="fas fa-map-marker-alt"></i> Cidade
                         </label>
-                        <input type="text" name="municipio" class="form-control"
-                               placeholder="Digite o município"
-                               value="<?php echo htmlspecialchars($filtroMunicipio); ?>">
+                        <input type="text" name="cidade" class="form-control"
+                               placeholder="Digite a cidade"
+                               value="<?php echo htmlspecialchars($filtroCidade); ?>">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">
@@ -258,7 +258,7 @@ $pageTitle = 'Gerenciar Equipes';
                             <tr>
                                 <th>Nome da Equipe</th>
                                 <th>Responsável</th>
-                                <th>Município</th>
+                                <th>Cidade</th>
                                 <th class="text-center">Atletas</th>
                                 <th class="text-center">Inscrições</th>
                                 <th class="text-center">Status</th>
@@ -282,11 +282,11 @@ $pageTitle = 'Gerenciar Equipes';
                                     <td>
                                         <div><?php echo htmlspecialchars($equipe['responsavel_nome']); ?></div>
                                         <small class="text-muted">
-                                            <i class="fas fa-envelope"></i> <?php echo htmlspecialchars($equipe['responsavel_email']); ?>
+                                            <i class="fas fa-envelope"></i> <?php echo htmlspecialchars($equipe['email']); ?>
                                         </small>
                                     </td>
                                     <td>
-                                        <?php echo htmlspecialchars($equipe['municipio']); ?>
+                                        <?php echo htmlspecialchars($equipe['cidade'] ?? ''); ?>
                                     </td>
                                     <td class="text-center">
                                         <span class="badge bg-info"><?php echo $equipe['total_atletas']; ?></span>

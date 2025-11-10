@@ -18,7 +18,7 @@ $equipe = null;
 if (!$mensagemErro) {
     try {
         $stmt = $pdo->prepare("
-            SELECT c.*, e.nome as equipe_nome, e.municipio as equipe_municipio
+            SELECT c.*, e.nome as equipe_nome, e.cidade as equipe_municipio
             FROM convites_atletas c
             INNER JOIN equipes e ON c.equipe_id = e.id
             WHERE c.token = ?
